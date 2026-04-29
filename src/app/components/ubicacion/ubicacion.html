@@ -1,0 +1,20 @@
+<section class="ubicacion-page">
+  <div class="panel">
+    <p class="eyebrow">Geolocalizacion</p>
+    <h1>Tu ubicacion en el mapa</h1>
+    <p class="description">
+      Este componente solicita permiso al navegador y, si lo aceptas, muestra tu posicion
+      actual directamente sobre el mapa.
+    </p>
+
+    <button class="location-button" type="button" (click)="requestLocation()" [disabled]="isLoading()">
+      {{ isLoading() ? 'Solicitando permiso...' : 'Compartir ubicacion' }}
+    </button>
+
+    <p class="status">{{ status() }}</p>
+  </div>
+
+  <div class="map-card">
+    <div #mapContainer class="map-frame" aria-label="Mapa con tu ubicacion actual"></div>
+  </div>
+</section>

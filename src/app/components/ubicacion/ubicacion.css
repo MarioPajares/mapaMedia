@@ -1,0 +1,95 @@
+:host {
+  display: block;
+}
+
+.ubicacion-page {
+  min-height: calc(100dvh - 88px);
+  padding: 2rem 1.5rem 3rem;
+  background:
+    radial-gradient(circle at top right, rgba(30, 136, 255, 0.22), transparent 30%),
+    linear-gradient(180deg, #f4f8ff 0%, #e7f0ff 100%);
+}
+
+.panel,
+.map-card {
+  width: min(1100px, 100%);
+  margin: 0 auto;
+}
+
+.panel {
+  margin-bottom: 1.5rem;
+}
+
+.eyebrow {
+  margin: 0 0 0.6rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #0b4f9c;
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(2.2rem, 5vw, 4rem);
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: #0f172a;
+}
+
+.description,
+.status {
+  max-width: 46rem;
+  line-height: 1.6;
+  color: #29435c;
+}
+
+.description {
+  margin: 1rem 0 1.25rem;
+}
+
+.status {
+  margin: 1rem 0 0;
+  font-weight: 500;
+}
+
+.location-button {
+  border: 0;
+  border-radius: 999px;
+  padding: 0.9rem 1.35rem;
+  font: inherit;
+  font-weight: 700;
+  color: #ffffff;
+  background: linear-gradient(135deg, #0b4f9c, #1e88ff);
+  cursor: pointer;
+  box-shadow: 0 20px 35px rgba(30, 136, 255, 0.22);
+}
+
+.location-button:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.map-card {
+  overflow: hidden;
+  border: 1px solid rgba(30, 136, 255, 0.18);
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.7);
+  box-shadow: 0 30px 60px rgba(15, 23, 42, 0.12);
+  backdrop-filter: blur(10px);
+}
+
+.map-frame {
+  width: 100%;
+  height: min(72dvh, 760px);
+}
+
+@media (max-width: 720px) {
+  .ubicacion-page {
+    padding: 1rem 1rem 2rem;
+  }
+
+  .map-frame {
+    height: 70dvh;
+  }
+}

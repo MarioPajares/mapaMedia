@@ -1,0 +1,20 @@
+<section class="mapa-page">
+  <!-- <div class="panel">
+    <p class="eyebrow">Recorrido</p>
+    <h1>Ruta y ubicacion</h1>
+    <p class="description">
+      El recorrido intenta solicitar tu ubicacion automaticamente al abrirse y la superpone
+      sobre el mapa.
+    </p>
+
+    <button class="location-button" type="button" (click)="requestLocation()" [disabled]="isLoading()">
+      {{ isLoading() ? 'Solicitando permiso...' : 'Mostrar mi ubicacion' }}
+    </button>
+
+    <p class="status">{{ status() }}</p>
+  </div> -->
+
+  <div class="map-card">
+    <div #mapContainer class="map-frame" aria-label="Mapa de la ciudad de Caceres con recorrido GPX"></div>
+  </div>
+</section>

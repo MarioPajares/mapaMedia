@@ -1,0 +1,148 @@
+:host {
+  display: block;
+  min-height: 100dvh;
+  color: #132a13;
+}
+
+.mapa-page {
+  min-height: 100dvh;
+  padding: 3rem 1.5rem;
+  background:
+    radial-gradient(circle at top left, rgba(163, 177, 138, 0.45), transparent 28%),
+    linear-gradient(180deg, #f7f3e8 0%, #e8edd7 100%);
+}
+
+.panel,
+.map-card {
+  width: min(1100px, 100%);
+  margin: 0 auto;
+}
+
+.panel {
+  margin-bottom: 1.5rem;
+}
+
+.eyebrow {
+  margin: 0 0 0.6rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #4f772d;
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(2.6rem, 6vw, 5rem);
+  font-weight: 800;
+  line-height: 0.95;
+  letter-spacing: -0.04em;
+}
+
+.description {
+  max-width: 42rem;
+  margin: 1rem 0 1.25rem;
+  font-size: 1.05rem;
+  line-height: 1.6;
+  color: #31572c;
+}
+
+.status {
+  max-width: 42rem;
+  margin: 1rem 0 0;
+  line-height: 1.6;
+  color: #31572c;
+  font-weight: 500;
+}
+
+.location-button {
+  border: 0;
+  border-radius: 999px;
+  padding: 0.9rem 1.35rem;
+  font: inherit;
+  font-weight: 700;
+  color: #ffffff;
+  background: linear-gradient(135deg, #2d6a4f, #40916c);
+  cursor: pointer;
+  box-shadow: 0 20px 35px rgba(64, 145, 108, 0.24);
+}
+
+.location-button:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.map-card {
+  overflow: hidden;
+  border: 1px solid rgba(79, 119, 45, 0.2);
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.55);
+  box-shadow: 0 30px 60px rgba(19, 42, 19, 0.14);
+  backdrop-filter: blur(10px);
+}
+
+.map-frame {
+  display: block;
+  width: 100%;
+  height: min(72dvh, 760px);
+  border: 0;
+}
+
+:host ::ng-deep .start-gate-icon {
+  background: transparent;
+  border: 0;
+}
+
+:host ::ng-deep .start-gate {
+  position: relative;
+  width: 46px;
+  height: 38px;
+}
+
+:host ::ng-deep .gate-banner {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 15px;
+  border-radius: 6px 6px 2px 2px;
+  background:
+    linear-gradient(90deg, #2f9e44 0 25%, #ffffff 25% 50%, #2f9e44 50% 75%, #ffffff 75% 100%);
+  color: #16351f;
+  font-size: 6px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  box-shadow: 0 4px 10px rgba(22, 53, 31, 0.22);
+}
+
+:host ::ng-deep .gate-post {
+  position: absolute;
+  top: 13px;
+  width: 4px;
+  height: 21px;
+  border-radius: 999px;
+  background: #2f9e44;
+  box-shadow: 0 3px 8px rgba(22, 53, 31, 0.22);
+}
+
+:host ::ng-deep .gate-post-left {
+  left: 2px;
+}
+
+:host ::ng-deep .gate-post-right {
+  right: 2px;
+}
+
+@media (max-width: 720px) {
+  .mapa-page {
+    padding: 1rem;
+  }
+
+  .map-frame {
+    height: 70dvh;
+  }
+}
