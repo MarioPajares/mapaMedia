@@ -7,9 +7,9 @@
 .mapa-page {
   min-height: 100dvh;
   padding: 3rem 1.5rem;
-  background:
+  /* background:
     radial-gradient(circle at top left, rgba(163, 177, 138, 0.45), transparent 28%),
-    linear-gradient(180deg, #f7f3e8 0%, #e8edd7 100%);
+    linear-gradient(180deg, #f7f3e8 0%, #e8edd7 100%); */
 }
 
 .panel,
@@ -74,11 +74,13 @@ h1 {
 
 .map-card {
   overflow: hidden;
+  width: 80%;
   border: 1px solid rgba(79, 119, 45, 0.2);
   border-radius: 28px;
   background: rgba(255, 255, 255, 0.55);
   box-shadow: 0 30px 60px rgba(19, 42, 19, 0.14);
   backdrop-filter: blur(10px);
+  margin: 0 auto;
 }
 
 .map-frame {
