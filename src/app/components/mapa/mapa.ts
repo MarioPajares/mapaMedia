@@ -40,7 +40,6 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
   private locationWatchId?: number;
   private latestLocationUnsubscribe?: Unsubscribe;
   private hasCenteredOnUser = false;
-  private isUsingApproximateLocation = false;
 
   constructor() {
     const app = getApps()[0] ?? initializeApp(environment.firebase);
@@ -155,42 +154,27 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
 
     this.isLoading.set(true);
     this.status.set('Buscando tu ubicacion...');
-    this.startLocationWatch(true);
+    this.startLocationWatch();
   }
 
-  private startLocationWatch(enableHighAccuracy: boolean): void {
+  private startLocationWatch(): void {
     if (this.locationWatchId !== undefined) {
       navigator.geolocation.clearWatch(this.locationWatchId);
     }
 
-    this.isUsingApproximateLocation = !enableHighAccuracy;
     this.locationWatchId = navigator.geolocation.watchPosition(
       (position) => {
         this.isLoading.set(false);
         this.showLocation(position);
       },
       (error) => {
-        if (
-          enableHighAccuracy &&
-          (error.code === error.POSITION_UNAVAILABLE || error.code === error.TIMEOUT)
-        ) {
-          this.status.set('El GPS preciso tarda demasiado. Probando ubicacion aproximada...');
-          this.startLocationWatch(false);
-          return;
-        }
-
-        if (!enableHighAccuracy && error.code === error.TIMEOUT) {
-          this.status.set('Sigo buscando tu ubicacion aproximada...');
-          return;
-        }
-
         this.isLoading.set(false);
         this.status.set(this.getErrorMessage(error));
       },
       {
-        enableHighAccuracy,
-        timeout: enableHighAccuracy ? 60000 : 120000,
-        maximumAge: enableHighAccuracy ? 30000 : 300000,
+        enableHighAccuracy: true,
+        timeout: 120000,
+        maximumAge: 0,
       }
     );
   }
@@ -258,8 +242,7 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
       this.map?.panTo(currentPoint, { animate: true });
     }
 
-    const precision = this.isUsingApproximateLocation ? 'aproximada' : 'precisa';
-    this.status.set(`Ubicacion ${precision} detectada. Precision ${Math.round(accuracy)} m.`);
+    this.status.set(`Ubicacion GPS detectada. Precision ${Math.round(accuracy)} m.`);
   }
 
   private showSharedLocation(location: SharedLocation): void {
@@ -271,8 +254,8 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
 
     this.sharedMarker = L.circleMarker(currentPoint, {
       radius: 6,
-      color: '#14532d',
-      fillColor: '#22c55e',
+      color: '#0b4f9c',
+      fillColor: '#1e88ff',
       fillOpacity: 1,
       weight: 2,
     }).addTo(this.map!);
@@ -280,8 +263,8 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
     if (accuracy > 0) {
       this.sharedAccuracyCircle = L.circle(currentPoint, {
         radius: accuracy,
-        color: '#16a34a',
-        fillColor: '#86efac',
+        color: '#1e88ff',
+        fillColor: '#7cc4ff',
         fillOpacity: 0.18,
         weight: 1,
       }).addTo(this.map!);

@@ -68,7 +68,7 @@ export class GpsRecorderService {
 
     this.isRecording.set(true);
     this.status.set('Buscando ubicacion para guardar cada minuto.');
-    this.startPositionWatch(true);
+    this.startPositionWatch();
 
     this.intervalId = window.setInterval(() => {
       void this.saveLatestPosition();
@@ -93,7 +93,7 @@ export class GpsRecorderService {
     this.status.set('GPS detenido.');
   }
 
-  private startPositionWatch(enableHighAccuracy: boolean): void {
+  private startPositionWatch(): void {
     if (this.watchId !== undefined) {
       navigator.geolocation.clearWatch(this.watchId);
       this.watchId = undefined;
@@ -109,27 +109,13 @@ export class GpsRecorderService {
         }
       },
       (error) => {
-        if (
-          enableHighAccuracy &&
-          (error.code === error.POSITION_UNAVAILABLE || error.code === error.TIMEOUT)
-        ) {
-          this.status.set('El GPS preciso tarda demasiado. Probando ubicacion aproximada para guardar.');
-          this.startPositionWatch(false);
-          return;
-        }
-
-        if (!enableHighAccuracy && error.code === error.TIMEOUT) {
-          this.status.set('Sigo buscando ubicacion aproximada para guardar.');
-          return;
-        }
-
         this.status.set(this.getGeolocationErrorMessage(error));
         console.error('GPS position error', error);
       },
       {
-        enableHighAccuracy,
-        maximumAge: enableHighAccuracy ? 30000 : 300000,
-        timeout: enableHighAccuracy ? 60000 : 120000,
+        enableHighAccuracy: true,
+        maximumAge: 0,
+        timeout: 120000,
       }
     );
   }
