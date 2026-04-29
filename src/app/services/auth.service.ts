@@ -35,6 +35,7 @@ export class AuthService {
   readonly isReady = signal(!this.configured);
   readonly isLoggedIn = computed(() => this.user() !== null);
   readonly displayName = computed(() => this.user()?.displayName ?? this.user()?.email ?? 'Usuario');
+  readonly canSeeHolaButton = computed(() => this.user()?.uid === 'WLV40U1oCZhiCTwNn41BBp1jZk93');
   readonly ready = new Promise<void>((resolve) => {
     this.resolveReady = resolve;
   });

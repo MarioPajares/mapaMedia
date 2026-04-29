@@ -36,10 +36,17 @@
 
 .nav-link {
   padding: 0.65rem 1rem;
+  border: 0;
   border-radius: 999px;
   color: #334155;
+  background: transparent;
   text-decoration: none;
+  font: inherit;
   font-weight: 600;
+}
+
+.nav-button {
+  cursor: pointer;
 }
 
 .nav-link.active {
