@@ -10,9 +10,9 @@
   position: sticky;
   top: 0;
   z-index: 1000;
-  display: flex;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
   align-items: center;
-  justify-content: space-between;
   gap: 1rem;
   padding: 1rem 1.5rem;
   background: rgba(255, 255, 255, 0.85);
@@ -31,6 +31,7 @@
 .nav {
   display: flex;
   gap: 0.75rem;
+  justify-content: center;
 }
 
 .nav-link {
@@ -46,9 +47,125 @@
   background: #0f172a;
 }
 
+.auth-area {
+  display: flex;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+.login-button,
+.user-trigger,
+.menu-action {
+  border: 0;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.login-button {
+  min-height: 42px;
+  border-radius: 999px;
+  padding: 0.65rem 1rem;
+  color: #ffffff;
+  background: #2f9e44;
+  box-shadow: 0 12px 24px rgba(47, 158, 68, 0.22);
+}
+
+.user-menu {
+  position: relative;
+}
+
+.user-menu[open] .user-trigger {
+  background: #eef7ee;
+}
+
+.user-trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 42px;
+  max-width: 240px;
+  border-radius: 999px;
+  padding: 0.35rem 0.75rem 0.35rem 0.35rem;
+  color: #16351f;
+  background: #ffffff;
+  box-shadow: inset 0 0 0 1px rgba(47, 158, 68, 0.22);
+  list-style: none;
+}
+
+.user-trigger::-webkit-details-marker {
+  display: none;
+}
+
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  color: #ffffff;
+  background: #2f9e44;
+}
+
+.user-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.menu-panel {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  width: 220px;
+  padding: 0.5rem;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.16);
+}
+
+.menu-name {
+  margin: 0;
+  padding: 0.65rem 0.75rem;
+  overflow: hidden;
+  color: #334155;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.menu-action {
+  width: 100%;
+  border-radius: 6px;
+  padding: 0.75rem;
+  color: #991b1b;
+  background: transparent;
+  text-align: left;
+}
+
+.menu-action:hover {
+  background: #fff1f2;
+}
+
 @media (max-width: 640px) {
   .topbar {
-    flex-direction: column;
-    align-items: flex-start;
+    grid-template-columns: 1fr auto;
+  }
+
+  .nav {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+    order: 2;
+  }
+
+  .auth-area {
+    min-width: 0;
+  }
+
+  .user-trigger {
+    max-width: 170px;
   }
 }

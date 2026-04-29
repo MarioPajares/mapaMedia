@@ -1,10 +1,28 @@
 <div class="app-shell">
-  <header class="topbar">
-    <nav class="nav">
-      <a routerLink="/mapa" routerLinkActive="active" class="nav-link">Recorrido</a>
-      <!-- <a routerLink="/ubicacion" routerLinkActive="active" class="nav-link">Ubicacion</a> -->
-    </nav>
-  </header>
+  @if (auth.isLoggedIn()) {
+    <header class="topbar">
+      <a routerLink="/mapa" class="brand">Mapa Media</a>
+
+      <nav class="nav">
+        <a routerLink="/mapa" routerLinkActive="active" class="nav-link">Recorrido</a>
+        <!-- <a routerLink="/ubicacion" routerLinkActive="active" class="nav-link">Ubicacion</a> -->
+      </nav>
+
+      <div class="auth-area">
+        <details class="user-menu">
+          <summary class="user-trigger">
+            <span class="avatar">{{ auth.displayName().charAt(0).toUpperCase() }}</span>
+            <span class="user-name">{{ auth.displayName() }}</span>
+          </summary>
+
+          <div class="menu-panel">
+            <p class="menu-name">{{ auth.displayName() }}</p>
+            <button class="menu-action" type="button" (click)="logout()">Cerrar sesion</button>
+          </div>
+        </details>
+      </div>
+    </header>
+  }
 
   <router-outlet />
 </div>
