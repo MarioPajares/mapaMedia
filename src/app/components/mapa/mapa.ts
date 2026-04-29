@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, OnDestroy, ViewChild, inject, signal } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnDestroy, ViewChild, computed, inject, signal } from '@angular/core';
 import { FirebaseError, getApps, initializeApp } from 'firebase/app';
 import { doc, getFirestore, onSnapshot, type Firestore, type Unsubscribe } from 'firebase/firestore';
 import * as L from 'leaflet';
@@ -30,6 +30,7 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
   protected readonly isLoading = signal(false);
   protected readonly auth = inject(AuthService);
   protected readonly gpsRecorder = inject(GpsRecorderService);
+  protected readonly isGpsWriter = computed(() => this.auth.user()?.uid === environment.gpsWriterUid);
   private readonly db: Firestore;
 
   private map?: L.Map;

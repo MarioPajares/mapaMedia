@@ -1,6 +1,14 @@
 <section class="mapa-page">
   <p class="gps-recorder-status">{{ status() }} · {{ gpsRecorder.status() }}</p>
 
+  @if (isGpsWriter()) {
+    <div class="gps-actions">
+      <button class="location-button" type="button" (click)="requestLocation()" [disabled]="isLoading()">
+        {{ isLoading() ? 'Activando GPS...' : 'Activar GPS' }}
+      </button>
+    </div>
+  }
+
   <!-- <div class="panel">
     <p class="eyebrow">Recorrido</p>
     <h1>Ruta y ubicacion</h1>

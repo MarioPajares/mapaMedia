@@ -30,6 +30,11 @@
   font-weight: 700;
 }
 
+.gps-actions {
+  width: min(1100px, 80%);
+  margin: 0 auto 1rem;
+}
+
 .eyebrow {
   margin: 0 0 0.6rem;
   font-size: 0.85rem;
@@ -104,6 +109,10 @@ h1 {
   }
 
   .gps-recorder-status {
+    width: 100%;
+  }
+
+  .gps-actions {
     width: 100%;
   }
 
