@@ -1,5 +1,5 @@
 import { Injectable, inject, signal } from '@angular/core';
-import { initializeApp, getApps } from 'firebase/app';
+import { FirebaseError, initializeApp, getApps } from 'firebase/app';
 import {
   addDoc,
   collection,
@@ -20,6 +20,10 @@ export class GpsRecorderService {
   private readonly auth = inject(AuthService);
   private readonly db: Firestore;
   private intervalId?: number;
+  private watchId?: number;
+  private latestPosition?: GeolocationPosition;
+  private isSaving = false;
+  private lastSavedAt = 0;
 
   readonly isRecording = signal(false);
   readonly status = signal('GPS no iniciado.');
@@ -30,9 +34,15 @@ export class GpsRecorderService {
   }
 
   start(): void {
-    if (this.intervalId !== undefined) {
+    void this.startRecording();
+  }
+
+  private async startRecording(): Promise<void> {
+    if (this.intervalId !== undefined || this.watchId !== undefined) {
       return;
     }
+
+    await this.auth.ready;
 
     const user = this.auth.user();
 
@@ -46,31 +56,89 @@ export class GpsRecorderService {
       return;
     }
 
+    if (!window.isSecureContext) {
+      this.status.set('El guardado GPS necesita HTTPS o localhost.');
+      return;
+    }
+
     if (!navigator.geolocation) {
       this.status.set('Este dispositivo no soporta geolocalizacion.');
       return;
     }
 
     this.isRecording.set(true);
-    this.status.set('Guardando posicion GPS cada minuto.');
-    void this.saveCurrentPosition();
+    this.status.set('Buscando ubicacion para guardar cada minuto.');
+    this.startPositionWatch(true);
 
     this.intervalId = window.setInterval(() => {
-      void this.saveCurrentPosition();
+      void this.saveLatestPosition();
     }, ONE_MINUTE_MS);
   }
 
   stop(): void {
+    if (this.watchId !== undefined) {
+      navigator.geolocation.clearWatch(this.watchId);
+      this.watchId = undefined;
+    }
+
     if (this.intervalId !== undefined) {
       window.clearInterval(this.intervalId);
       this.intervalId = undefined;
     }
 
+    this.latestPosition = undefined;
+    this.isSaving = false;
+    this.lastSavedAt = 0;
     this.isRecording.set(false);
     this.status.set('GPS detenido.');
   }
 
-  private async saveCurrentPosition(): Promise<void> {
+  private startPositionWatch(enableHighAccuracy: boolean): void {
+    if (this.watchId !== undefined) {
+      navigator.geolocation.clearWatch(this.watchId);
+      this.watchId = undefined;
+    }
+
+    this.watchId = navigator.geolocation.watchPosition(
+      (position) => {
+        this.latestPosition = position;
+        this.status.set('Ubicacion lista. Se guardara cada minuto.');
+
+        if (this.lastSavedAt === 0) {
+          void this.saveLatestPosition();
+        }
+      },
+      (error) => {
+        if (
+          enableHighAccuracy &&
+          (error.code === error.POSITION_UNAVAILABLE || error.code === error.TIMEOUT)
+        ) {
+          this.status.set('El GPS preciso tarda demasiado. Probando ubicacion aproximada para guardar.');
+          this.startPositionWatch(false);
+          return;
+        }
+
+        if (!enableHighAccuracy && error.code === error.TIMEOUT) {
+          this.status.set('Sigo buscando ubicacion aproximada para guardar.');
+          return;
+        }
+
+        this.status.set(this.getGeolocationErrorMessage(error));
+        console.error('GPS position error', error);
+      },
+      {
+        enableHighAccuracy,
+        maximumAge: enableHighAccuracy ? 30000 : 300000,
+        timeout: enableHighAccuracy ? 60000 : 120000,
+      }
+    );
+  }
+
+  private async saveLatestPosition(): Promise<void> {
+    if (this.isSaving) {
+      return;
+    }
+
     const user = this.auth.user();
 
     if (!user || user.uid !== environment.gpsWriterUid) {
@@ -78,38 +146,72 @@ export class GpsRecorderService {
       return;
     }
 
-    try {
-      const position = await this.getCurrentPosition();
-      const payload = {
-        uid: user.uid,
-        displayName: user.displayName ?? user.email ?? 'Usuario',
-        email: user.email ?? '',
-        latitude: position.coords.latitude,
-        longitude: position.coords.longitude,
-        accuracy: position.coords.accuracy,
-        altitude: position.coords.altitude,
-        heading: position.coords.heading,
-        speed: position.coords.speed,
-        capturedAtMs: position.timestamp,
-        savedAt: serverTimestamp(),
-      };
+    if (!this.latestPosition) {
+      this.status.set('Esperando una posicion valida para guardar.');
+      return;
+    }
 
+    this.isSaving = true;
+    const position = this.latestPosition;
+    const payload = {
+      uid: user.uid,
+      displayName: user.displayName ?? user.email ?? 'Usuario',
+      email: user.email ?? '',
+      latitude: position.coords.latitude,
+      longitude: position.coords.longitude,
+      accuracy: position.coords.accuracy,
+      altitude: position.coords.altitude,
+      heading: position.coords.heading,
+      speed: position.coords.speed,
+      capturedAtMs: position.timestamp,
+      savedAt: serverTimestamp(),
+    };
+
+    try {
       await setDoc(doc(this.db, 'latestLocations', user.uid), payload);
       await addDoc(collection(this.db, 'gpsPositions', user.uid, 'samples'), payload);
-
+      this.lastSavedAt = Date.now();
       this.status.set(`GPS guardado: ${new Date().toLocaleTimeString()}`);
-    } catch {
-      this.status.set('No se pudo guardar la posicion GPS.');
+    } catch (error) {
+      this.status.set(this.getFirestoreErrorMessage(error));
+      console.error('Firestore GPS save error', error);
+    } finally {
+      this.isSaving = false;
     }
   }
 
-  private getCurrentPosition(): Promise<GeolocationPosition> {
-    return new Promise((resolve, reject) => {
-      navigator.geolocation.getCurrentPosition(resolve, reject, {
-        enableHighAccuracy: true,
-        maximumAge: 0,
-        timeout: 15000,
-      });
-    });
+  private getGeolocationErrorMessage(error: unknown): string {
+    if (this.isGeolocationError(error)) {
+      switch (error.code) {
+        case 1:
+          return 'Permiso de ubicacion denegado.';
+        case 2:
+          return 'La ubicacion no esta disponible.';
+        case 3:
+          return 'El GPS ha tardado demasiado en responder.';
+      }
+    }
+
+    return 'No se pudo leer la posicion GPS.';
+  }
+
+  private isGeolocationError(error: unknown): error is GeolocationPositionError {
+    return typeof error === 'object' && error !== null && 'code' in error;
+  }
+
+  private getFirestoreErrorMessage(error: unknown): string {
+    if (error instanceof FirebaseError) {
+      if (error.code === 'permission-denied') {
+        return 'Firestore rechazo el guardado: revisa reglas y UID autorizado.';
+      }
+
+      if (error.code === 'unavailable') {
+        return 'Firestore no esta disponible ahora mismo.';
+      }
+
+      return `Error de Firestore: ${error.code}`;
+    }
+
+    return 'No se pudo guardar la posicion GPS en Firestore.';
   }
 }

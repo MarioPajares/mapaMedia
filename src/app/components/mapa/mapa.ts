@@ -1,7 +1,19 @@
 import { AfterViewInit, Component, ElementRef, OnDestroy, ViewChild, inject, signal } from '@angular/core';
+import { FirebaseError, getApps, initializeApp } from 'firebase/app';
+import { doc, getFirestore, onSnapshot, type Firestore, type Unsubscribe } from 'firebase/firestore';
 import * as L from 'leaflet';
 
+import { environment } from '../../../environments/environment';
+import { AuthService } from '../../services/auth.service';
 import { GpsRecorderService } from '../../services/gps-recorder.service';
+
+interface SharedLocation {
+  accuracy?: number;
+  capturedAtMs?: number;
+  displayName?: string;
+  latitude: number;
+  longitude: number;
+}
 
 @Component({
   selector: 'app-mapa',
@@ -14,13 +26,26 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
 
   protected readonly status = signal('Solicitando tu ubicacion al abrir el recorrido...');
   protected readonly isLoading = signal(false);
+  protected readonly auth = inject(AuthService);
   protected readonly gpsRecorder = inject(GpsRecorderService);
+  private readonly db: Firestore;
 
   private map?: L.Map;
   private routeBounds?: L.LatLngBounds;
   private userMarker?: L.CircleMarker;
   private accuracyCircle?: L.Circle;
+  private sharedMarker?: L.CircleMarker;
+  private sharedAccuracyCircle?: L.Circle;
   private startMarker?: L.CircleMarker;
+  private locationWatchId?: number;
+  private latestLocationUnsubscribe?: Unsubscribe;
+  private hasCenteredOnUser = false;
+  private isUsingApproximateLocation = false;
+
+  constructor() {
+    const app = getApps()[0] ?? initializeApp(environment.firebase);
+    this.db = getFirestore(app);
+  }
 
   async ngAfterViewInit(): Promise<void> {
     const container = this.mapContainer?.nativeElement;
@@ -59,43 +84,113 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
 
       this.routeBounds = route.getBounds();
       this.map.fitBounds(this.routeBounds, { padding: [24, 24] });
+      await this.startLocationFeatures();
+      return;
+    }
+
+    this.map.setView([39.4762, -6.3722], 13);
+    await this.startLocationFeatures();
+  }
+
+  ngOnDestroy(): void {
+    if (this.locationWatchId !== undefined) {
+      navigator.geolocation.clearWatch(this.locationWatchId);
+    }
+
+    this.latestLocationUnsubscribe?.();
+    this.gpsRecorder.stop();
+    this.map?.remove();
+  }
+
+  private async startLocationFeatures(): Promise<void> {
+    await this.auth.ready;
+    this.watchSharedLocation();
+
+    if (this.auth.user()?.uid === environment.gpsWriterUid) {
       this.requestLocation();
       this.gpsRecorder.start();
       return;
     }
 
-    this.map.setView([39.4762, -6.3722], 13);
-    this.requestLocation();
-    this.gpsRecorder.start();
+    this.status.set('Mostrando la ultima ubicacion compartida.');
   }
 
-  ngOnDestroy(): void {
-    this.gpsRecorder.stop();
-    this.map?.remove();
+  private watchSharedLocation(): void {
+    this.latestLocationUnsubscribe?.();
+
+    this.latestLocationUnsubscribe = onSnapshot(
+      doc(this.db, 'latestLocations', environment.gpsWriterUid),
+      (snapshot) => {
+        if (!snapshot.exists()) {
+          this.status.set('Todavia no hay ninguna ubicacion compartida.');
+          return;
+        }
+
+        const location = snapshot.data() as Partial<SharedLocation>;
+
+        if (typeof location.latitude !== 'number' || typeof location.longitude !== 'number') {
+          this.status.set('La ultima ubicacion guardada no es valida.');
+          return;
+        }
+
+        this.showSharedLocation(location as SharedLocation);
+      },
+      (error) => {
+        this.status.set(this.getFirestoreReadErrorMessage(error));
+        console.error('Latest location read error', error);
+      }
+    );
   }
 
   protected requestLocation(): void {
+    if (!window.isSecureContext) {
+      this.status.set('La ubicacion necesita HTTPS. Abre la app desde Netlify o localhost.');
+      return;
+    }
+
     if (!navigator.geolocation) {
       this.status.set('Tu navegador no soporta geolocalizacion.');
       return;
     }
 
     this.isLoading.set(true);
-    this.status.set('Solicitando permiso de ubicacion...');
+    this.status.set('Buscando tu ubicacion...');
+    this.startLocationWatch(true);
+  }
 
-    navigator.geolocation.getCurrentPosition(
+  private startLocationWatch(enableHighAccuracy: boolean): void {
+    if (this.locationWatchId !== undefined) {
+      navigator.geolocation.clearWatch(this.locationWatchId);
+    }
+
+    this.isUsingApproximateLocation = !enableHighAccuracy;
+    this.locationWatchId = navigator.geolocation.watchPosition(
       (position) => {
         this.isLoading.set(false);
         this.showLocation(position);
       },
       (error) => {
+        if (
+          enableHighAccuracy &&
+          (error.code === error.POSITION_UNAVAILABLE || error.code === error.TIMEOUT)
+        ) {
+          this.status.set('El GPS preciso tarda demasiado. Probando ubicacion aproximada...');
+          this.startLocationWatch(false);
+          return;
+        }
+
+        if (!enableHighAccuracy && error.code === error.TIMEOUT) {
+          this.status.set('Sigo buscando tu ubicacion aproximada...');
+          return;
+        }
+
         this.isLoading.set(false);
         this.status.set(this.getErrorMessage(error));
       },
       {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0,
+        enableHighAccuracy,
+        timeout: enableHighAccuracy ? 60000 : 120000,
+        maximumAge: enableHighAccuracy ? 30000 : 300000,
       }
     );
   }
@@ -152,14 +247,54 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
       weight: 1,
     }).addTo(this.map!);
 
-    const focusBounds = this.routeBounds
-      ? this.routeBounds.extend(currentPoint)
-      : L.latLngBounds([currentPoint]);
+    if (!this.hasCenteredOnUser) {
+      const focusBounds = this.routeBounds
+        ? L.latLngBounds(this.routeBounds.getSouthWest(), this.routeBounds.getNorthEast()).extend(currentPoint)
+        : L.latLngBounds([currentPoint]);
 
-    this.map?.fitBounds(focusBounds, { padding: [24, 24] });
-    this.status.set(
-      `Ubicacion detectada. Latitud ${latitude.toFixed(5)}, longitud ${longitude.toFixed(5)}.`
-    );
+      this.map?.fitBounds(focusBounds, { padding: [24, 24] });
+      this.hasCenteredOnUser = true;
+    } else {
+      this.map?.panTo(currentPoint, { animate: true });
+    }
+
+    const precision = this.isUsingApproximateLocation ? 'aproximada' : 'precisa';
+    this.status.set(`Ubicacion ${precision} detectada. Precision ${Math.round(accuracy)} m.`);
+  }
+
+  private showSharedLocation(location: SharedLocation): void {
+    const currentPoint: L.LatLngTuple = [location.latitude, location.longitude];
+    const accuracy = location.accuracy ?? 0;
+
+    this.sharedMarker?.remove();
+    this.sharedAccuracyCircle?.remove();
+
+    this.sharedMarker = L.circleMarker(currentPoint, {
+      radius: 6,
+      color: '#14532d',
+      fillColor: '#22c55e',
+      fillOpacity: 1,
+      weight: 2,
+    }).addTo(this.map!);
+
+    if (accuracy > 0) {
+      this.sharedAccuracyCircle = L.circle(currentPoint, {
+        radius: accuracy,
+        color: '#16a34a',
+        fillColor: '#86efac',
+        fillOpacity: 0.18,
+        weight: 1,
+      }).addTo(this.map!);
+    }
+
+    if (!this.hasCenteredOnUser) {
+      this.map?.setView(currentPoint, 16);
+      this.hasCenteredOnUser = true;
+    }
+
+    const capturedAt = location.capturedAtMs ? new Date(location.capturedAtMs).toLocaleTimeString() : '';
+    const suffix = capturedAt ? ` Actualizada a las ${capturedAt}.` : '';
+    this.status.set(`Ultima ubicacion compartida visible.${suffix}`);
   }
 
   private getErrorMessage(error: GeolocationPositionError): string {
@@ -173,5 +308,13 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
       default:
         return 'Ha ocurrido un error al obtener la ubicacion.';
     }
+  }
+
+  private getFirestoreReadErrorMessage(error: unknown): string {
+    if (error instanceof FirebaseError && error.code === 'permission-denied') {
+      return 'No tienes permiso para leer la ultima ubicacion.';
+    }
+
+    return 'No se pudo leer la ultima ubicacion compartida.';
   }
 }
