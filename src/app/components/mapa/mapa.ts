@@ -17,7 +17,7 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
   private routeBounds?: L.LatLngBounds;
   private userMarker?: L.CircleMarker;
   private accuracyCircle?: L.Circle;
-  private startMarker?: L.Marker;
+  private startMarker?: L.CircleMarker;
 
   async ngAfterViewInit(): Promise<void> {
     const container = this.mapContainer?.nativeElement;
@@ -46,20 +46,12 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
         opacity: 0.9,
       }).addTo(this.map);
 
-      this.startMarker = L.marker(routePoints[0], {
-        icon: L.divIcon({
-          className: 'start-gate-icon',
-          html: `
-            <div class="start-gate" aria-hidden="true">
-              <span class="gate-banner">SALIDA</span>
-              <span class="gate-post gate-post-left"></span>
-              <span class="gate-post gate-post-right"></span>
-            </div>
-          `,
-          iconSize: [46, 38],
-          iconAnchor: [23, 32],
-        }),
-        title: 'Salida',
+      this.startMarker = L.circleMarker(routePoints[0], {
+        radius: 6,
+        color: '#1b5e20',
+        fillColor: '#2f9e44',
+        fillOpacity: 1,
+        weight: 2,
       }).addTo(this.map);
 
       this.routeBounds = route.getBounds();
@@ -139,11 +131,11 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
     this.accuracyCircle?.remove();
 
     this.userMarker = L.circleMarker(currentPoint, {
-      radius: 10,
+      radius: 5,
       color: '#0b4f9c',
       fillColor: '#1e88ff',
       fillOpacity: 0.95,
-      weight: 3,
+      weight: 2,
     }).addTo(this.map!);
 
     this.accuracyCircle = L.circle(currentPoint, {

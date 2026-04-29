@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Mapa Media">
+  <rect width="512" height="512" fill="#2f9e44"/>
+  <circle cx="256" cy="256" r="188" fill="#f7f3e8"/>
+  <path d="M122 336c38-80 70-124 108-124 45 0 59 60 102 60 29 0 48-24 64-56" fill="none" stroke="#1368ce" stroke-width="34" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="122" cy="336" r="26" fill="#2f9e44" stroke="#1b5e20" stroke-width="10"/>
+  <path d="M256 104c-58 0-105 47-105 105 0 78 105 198 105 198s105-120 105-198c0-58-47-105-105-105z" fill="#2f9e44"/>
+  <circle cx="256" cy="209" r="38" fill="#ffffff"/>
+</svg>

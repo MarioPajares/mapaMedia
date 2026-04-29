@@ -88,55 +88,6 @@ h1 {
   border: 0;
 }
 
-:host ::ng-deep .start-gate-icon {
-  background: transparent;
-  border: 0;
-}
-
-:host ::ng-deep .start-gate {
-  position: relative;
-  width: 46px;
-  height: 38px;
-}
-
-:host ::ng-deep .gate-banner {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 42px;
-  height: 15px;
-  border-radius: 6px 6px 2px 2px;
-  background:
-    linear-gradient(90deg, #2f9e44 0 25%, #ffffff 25% 50%, #2f9e44 50% 75%, #ffffff 75% 100%);
-  color: #16351f;
-  font-size: 6px;
-  font-weight: 900;
-  letter-spacing: 0.08em;
-  box-shadow: 0 4px 10px rgba(22, 53, 31, 0.22);
-}
-
-:host ::ng-deep .gate-post {
-  position: absolute;
-  top: 13px;
-  width: 4px;
-  height: 21px;
-  border-radius: 999px;
-  background: #2f9e44;
-  box-shadow: 0 3px 8px rgba(22, 53, 31, 0.22);
-}
-
-:host ::ng-deep .gate-post-left {
-  left: 2px;
-}
-
-:host ::ng-deep .gate-post-right {
-  right: 2px;
-}
-
 @media (max-width: 720px) {
   .mapa-page {
     padding: 1rem;

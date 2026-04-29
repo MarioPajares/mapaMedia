@@ -74,11 +74,11 @@ export class UbicacionComponent implements AfterViewInit, OnDestroy {
     this.accuracyCircle?.remove();
 
     this.userMarker = L.circleMarker(currentPoint, {
-      radius: 10,
+      radius: 5,
       color: '#0b4f9c',
       fillColor: '#1e88ff',
       fillOpacity: 0.95,
-      weight: 3,
+      weight: 2,
     }).addTo(this.map!);
 
     this.accuracyCircle = L.circle(currentPoint, {
