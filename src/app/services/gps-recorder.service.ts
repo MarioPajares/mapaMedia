@@ -14,6 +14,7 @@ import { environment } from '../../environments/environment';
 import { AuthService } from './auth.service';
 
 const ONE_MINUTE_MS = 60_000;
+const MAX_GPS_ACCURACY_METERS = 100;
 
 @Injectable({ providedIn: 'root' })
 export class GpsRecorderService {
@@ -101,6 +102,13 @@ export class GpsRecorderService {
 
     this.watchId = navigator.geolocation.watchPosition(
       (position) => {
+        if (position.coords.accuracy > MAX_GPS_ACCURACY_METERS) {
+          this.status.set(
+            `GPS impreciso (${Math.round(position.coords.accuracy)} m). Esperando mejor precision.`
+          );
+          return;
+        }
+
         this.latestPosition = position;
         this.status.set('Ubicacion lista. Se guardara cada minuto.');
 

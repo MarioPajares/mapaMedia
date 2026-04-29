@@ -15,6 +15,8 @@ interface SharedLocation {
   longitude: number;
 }
 
+const MAX_GPS_ACCURACY_METERS = 100;
+
 @Component({
   selector: 'app-mapa',
   standalone: true,
@@ -208,6 +210,14 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
 
   private showLocation(position: GeolocationPosition): void {
     const { latitude, longitude, accuracy } = position.coords;
+
+    if (accuracy > MAX_GPS_ACCURACY_METERS) {
+      this.status.set(
+        `GPS impreciso (${Math.round(accuracy)} m). Buscando una ubicacion mas precisa...`
+      );
+      return;
+    }
+
     const currentPoint: L.LatLngTuple = [latitude, longitude];
 
     this.userMarker?.remove();
