@@ -22,6 +22,14 @@
   margin-bottom: 1.5rem;
 }
 
+.gps-recorder-status {
+  width: min(1100px, 80%);
+  margin: 0 auto 1rem;
+  color: #31572c;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
 .eyebrow {
   margin: 0 0 0.6rem;
   font-size: 0.85rem;
@@ -93,6 +101,10 @@ h1 {
 @media (max-width: 720px) {
   .mapa-page {
     padding: 1rem;
+  }
+
+  .gps-recorder-status {
+    width: 100%;
   }
 
   .map-frame {

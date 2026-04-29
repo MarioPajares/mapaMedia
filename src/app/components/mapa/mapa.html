@@ -1,4 +1,8 @@
 <section class="mapa-page">
+  @if (gpsRecorder.isRecording()) {
+    <p class="gps-recorder-status">{{ gpsRecorder.status() }}</p>
+  }
+
   <!-- <div class="panel">
     <p class="eyebrow">Recorrido</p>
     <h1>Ruta y ubicacion</h1>

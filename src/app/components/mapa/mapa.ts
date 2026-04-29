@@ -1,5 +1,7 @@
-import { AfterViewInit, Component, ElementRef, OnDestroy, ViewChild, signal } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnDestroy, ViewChild, inject, signal } from '@angular/core';
 import * as L from 'leaflet';
+
+import { GpsRecorderService } from '../../services/gps-recorder.service';
 
 @Component({
   selector: 'app-mapa',
@@ -12,6 +14,7 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
 
   protected readonly status = signal('Solicitando tu ubicacion al abrir el recorrido...');
   protected readonly isLoading = signal(false);
+  protected readonly gpsRecorder = inject(GpsRecorderService);
 
   private map?: L.Map;
   private routeBounds?: L.LatLngBounds;
@@ -57,14 +60,17 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
       this.routeBounds = route.getBounds();
       this.map.fitBounds(this.routeBounds, { padding: [24, 24] });
       this.requestLocation();
+      this.gpsRecorder.start();
       return;
     }
 
     this.map.setView([39.4762, -6.3722], 13);
     this.requestLocation();
+    this.gpsRecorder.start();
   }
 
   ngOnDestroy(): void {
+    this.gpsRecorder.stop();
     this.map?.remove();
   }
 
