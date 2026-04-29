@@ -33,9 +33,7 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
   private map?: L.Map;
   private routeBounds?: L.LatLngBounds;
   private userMarker?: L.CircleMarker;
-  private accuracyCircle?: L.Circle;
   private sharedMarker?: L.CircleMarker;
-  private sharedAccuracyCircle?: L.Circle;
   private startMarker?: L.CircleMarker;
   private locationWatchId?: number;
   private latestLocationUnsubscribe?: Unsubscribe;
@@ -103,7 +101,6 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
 
   private async startLocationFeatures(): Promise<void> {
     await this.auth.ready;
-    this.watchSharedLocation();
 
     if (this.auth.user()?.uid === environment.gpsWriterUid) {
       this.requestLocation();
@@ -111,6 +108,7 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
       return;
     }
 
+    this.watchSharedLocation();
     this.status.set('Mostrando la ultima ubicacion compartida.');
   }
 
@@ -213,7 +211,6 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
     const currentPoint: L.LatLngTuple = [latitude, longitude];
 
     this.userMarker?.remove();
-    this.accuracyCircle?.remove();
 
     this.userMarker = L.circleMarker(currentPoint, {
       radius: 5,
@@ -221,14 +218,6 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
       fillColor: '#1e88ff',
       fillOpacity: 0.95,
       weight: 2,
-    }).addTo(this.map!);
-
-    this.accuracyCircle = L.circle(currentPoint, {
-      radius: accuracy,
-      color: '#1e88ff',
-      fillColor: '#7cc4ff',
-      fillOpacity: 0.2,
-      weight: 1,
     }).addTo(this.map!);
 
     if (!this.hasCenteredOnUser) {
@@ -247,10 +236,8 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
 
   private showSharedLocation(location: SharedLocation): void {
     const currentPoint: L.LatLngTuple = [location.latitude, location.longitude];
-    const accuracy = location.accuracy ?? 0;
 
     this.sharedMarker?.remove();
-    this.sharedAccuracyCircle?.remove();
 
     this.sharedMarker = L.circleMarker(currentPoint, {
       radius: 6,
@@ -259,16 +246,6 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
       fillOpacity: 1,
       weight: 2,
     }).addTo(this.map!);
-
-    if (accuracy > 0) {
-      this.sharedAccuracyCircle = L.circle(currentPoint, {
-        radius: accuracy,
-        color: '#1e88ff',
-        fillColor: '#7cc4ff',
-        fillOpacity: 0.18,
-        weight: 1,
-      }).addTo(this.map!);
-    }
 
     if (!this.hasCenteredOnUser) {
       this.map?.setView(currentPoint, 16);
