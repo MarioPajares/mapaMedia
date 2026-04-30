@@ -85,6 +85,11 @@ h1 {
   cursor: wait;
 }
 
+.location-button.danger {
+  background: linear-gradient(135deg, #9f1239, #e11d48);
+  box-shadow: 0 20px 35px rgba(225, 29, 72, 0.2);
+}
+
 .map-card {
   overflow: hidden;
   width: 80%;

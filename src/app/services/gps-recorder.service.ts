@@ -3,6 +3,7 @@ import { FirebaseError, initializeApp, getApps } from 'firebase/app';
 import {
   addDoc,
   collection,
+  deleteDoc,
   doc,
   getFirestore,
   serverTimestamp,
@@ -36,6 +37,26 @@ export class GpsRecorderService {
 
   start(): void {
     void this.startRecording();
+  }
+
+  async stopAndDeleteLatestLocation(): Promise<void> {
+    this.stop();
+
+    await this.auth.ready;
+    const user = this.auth.user();
+
+    if (!user || user.uid !== environment.gpsWriterUid) {
+      this.status.set('Este usuario no tiene permiso para borrar el GPS.');
+      return;
+    }
+
+    try {
+      await deleteDoc(doc(this.db, 'latestLocations', user.uid));
+      this.status.set('GPS desactivado y ultima ubicacion eliminada.');
+    } catch (error) {
+      this.status.set(this.getFirestoreDeleteErrorMessage(error));
+      console.error('Firestore GPS delete error', error);
+    }
   }
 
   private async startRecording(): Promise<void> {
@@ -207,5 +228,17 @@ export class GpsRecorderService {
     }
 
     return 'No se pudo guardar la posicion GPS en Firestore.';
+  }
+
+  private getFirestoreDeleteErrorMessage(error: unknown): string {
+    if (error instanceof FirebaseError) {
+      if (error.code === 'permission-denied') {
+        return 'Firestore rechazo el borrado: revisa reglas y UID autorizado.';
+      }
+
+      return `Error de Firestore al borrar: ${error.code}`;
+    }
+
+    return 'No se pudo borrar la ultima ubicacion en Firestore.';
   }
 }

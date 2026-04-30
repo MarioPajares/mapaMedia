@@ -106,13 +106,31 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
     await this.auth.ready;
 
     if (this.auth.user()?.uid === environment.gpsWriterUid) {
-      this.requestLocation();
-      this.gpsRecorder.start();
+      this.status.set('Pulsa Activar GPS para empezar a emitir ubicacion.');
       return;
     }
 
     this.watchSharedLocation();
     this.status.set('Mostrando la ultima ubicacion compartida.');
+  }
+
+  protected activateGps(): void {
+    this.requestLocation();
+    this.gpsRecorder.start();
+  }
+
+  protected async deactivateGps(): Promise<void> {
+    if (this.locationWatchId !== undefined) {
+      navigator.geolocation.clearWatch(this.locationWatchId);
+      this.locationWatchId = undefined;
+    }
+
+    this.isLoading.set(false);
+    this.userMarker?.remove();
+    this.userMarker = undefined;
+    this.hasCenteredOnUser = false;
+    await this.gpsRecorder.stopAndDeleteLatestLocation();
+    this.status.set('GPS desactivado.');
   }
 
   private watchSharedLocation(): void {

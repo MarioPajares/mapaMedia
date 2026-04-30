@@ -3,9 +3,15 @@
 
   @if (isGpsWriter()) {
     <div class="gps-actions">
-      <button class="location-button" type="button" (click)="requestLocation()" [disabled]="isLoading()">
-        {{ isLoading() ? 'Activando GPS...' : 'Activar GPS' }}
-      </button>
+      @if (gpsRecorder.isRecording()) {
+        <button class="location-button danger" type="button" (click)="deactivateGps()">
+          Desactivar
+        </button>
+      } @else {
+        <button class="location-button" type="button" (click)="activateGps()" [disabled]="isLoading()">
+          {{ isLoading() ? 'Activando GPS...' : 'Activar GPS' }}
+        </button>
+      }
     </div>
   }
 
