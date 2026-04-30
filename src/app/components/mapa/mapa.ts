@@ -1,6 +1,6 @@
 import { AfterViewInit, Component, ElementRef, OnDestroy, ViewChild, computed, inject, signal } from '@angular/core';
 import { FirebaseError, getApps, initializeApp } from 'firebase/app';
-import { doc, getFirestore, onSnapshot, type Firestore, type Unsubscribe } from 'firebase/firestore';
+import { doc, getDoc, getFirestore, type Firestore } from 'firebase/firestore';
 import * as L from 'leaflet';
 
 import { environment } from '../../../environments/environment';
@@ -14,6 +14,8 @@ interface SharedLocation {
   latitude: number;
   longitude: number;
 }
+
+const ONE_MINUTE_MS = 60_000;
 
 @Component({
   selector: 'app-mapa',
@@ -37,7 +39,7 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
   private sharedMarker?: L.CircleMarker;
   private startMarker?: L.CircleMarker;
   private locationWatchId?: number;
-  private latestLocationUnsubscribe?: Unsubscribe;
+  private latestLocationIntervalId?: number;
   private hasCenteredOnUser = false;
 
   constructor() {
@@ -95,7 +97,7 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
       navigator.geolocation.clearWatch(this.locationWatchId);
     }
 
-    this.latestLocationUnsubscribe?.();
+    this.stopSharedLocationPolling();
     this.gpsRecorder.stop();
     this.map?.remove();
   }
@@ -108,7 +110,7 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
       return;
     }
 
-    this.watchSharedLocation();
+    this.startSharedLocationPolling();
     this.status.set('Mostrando la ultima ubicacion compartida.');
   }
 
@@ -131,31 +133,45 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
     this.status.set('GPS desactivado.');
   }
 
-  private watchSharedLocation(): void {
-    this.latestLocationUnsubscribe?.();
+  private startSharedLocationPolling(): void {
+    this.stopSharedLocationPolling();
+    void this.checkSharedLocation();
 
-    this.latestLocationUnsubscribe = onSnapshot(
-      doc(this.db, 'latestLocations', environment.gpsWriterUid),
-      (snapshot) => {
-        if (!snapshot.exists()) {
-          this.status.set('Todavia no hay ninguna ubicacion compartida.');
-          return;
-        }
+    this.latestLocationIntervalId = window.setInterval(() => {
+      void this.checkSharedLocation();
+    }, ONE_MINUTE_MS);
+  }
 
-        const location = snapshot.data() as Partial<SharedLocation>;
+  private stopSharedLocationPolling(): void {
+    if (this.latestLocationIntervalId !== undefined) {
+      window.clearInterval(this.latestLocationIntervalId);
+      this.latestLocationIntervalId = undefined;
+    }
+  }
 
-        if (typeof location.latitude !== 'number' || typeof location.longitude !== 'number') {
-          this.status.set('La ultima ubicacion guardada no es valida.');
-          return;
-        }
+  private async checkSharedLocation(): Promise<void> {
+    try {
+      const snapshot = await getDoc(doc(this.db, 'latestLocations', environment.gpsWriterUid));
 
-        this.showSharedLocation(location as SharedLocation);
-      },
-      (error) => {
-        this.status.set(this.getFirestoreReadErrorMessage(error));
-        console.error('Latest location read error', error);
+      if (!snapshot.exists()) {
+        this.clearSharedLocation();
+        this.status.set('Todavia no hay ninguna ubicacion compartida.');
+        return;
       }
-    );
+
+      const location = snapshot.data() as Partial<SharedLocation>;
+
+      if (typeof location.latitude !== 'number' || typeof location.longitude !== 'number') {
+        this.clearSharedLocation();
+        this.status.set('La ultima ubicacion guardada no es valida.');
+        return;
+      }
+
+      this.showSharedLocation(location as SharedLocation);
+    } catch (error) {
+      this.status.set(this.getFirestoreReadErrorMessage(error));
+      console.error('Latest location read error', error);
+    }
   }
 
   protected requestLocation(): void {
@@ -274,6 +290,12 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
     const capturedAt = location.capturedAtMs ? new Date(location.capturedAtMs).toLocaleTimeString() : '';
     const suffix = capturedAt ? ` Actualizada a las ${capturedAt}.` : '';
     this.status.set(`Ultima ubicacion compartida visible.${suffix}`);
+  }
+
+  private clearSharedLocation(): void {
+    this.sharedMarker?.remove();
+    this.sharedMarker = undefined;
+    this.hasCenteredOnUser = false;
   }
 
   private getErrorMessage(error: GeolocationPositionError): string {
