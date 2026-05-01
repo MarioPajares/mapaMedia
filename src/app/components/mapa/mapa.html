@@ -1,7 +1,7 @@
 <section class="mapa-page">
-  <p class="gps-recorder-status">{{ status() }} · {{ gpsRecorder.status() }}</p>
-
   @if (isGpsWriter()) {
+    <p class="gps-recorder-status">{{ status() }} · {{ gpsRecorder.status() }}</p>
+
     <div class="gps-actions">
       @if (gpsRecorder.isRecording()) {
         <button class="location-button danger" type="button" (click)="deactivateGps()">

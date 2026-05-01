@@ -4,9 +4,8 @@
       <a routerLink="/mapa" class="brand">Mapa Media</a>
 
       <nav class="nav">
-        <a routerLink="/mapa" routerLinkActive="active" class="nav-link">Recorrido</a>
         @if (auth.canSeeHolaButton()) {
-          <button class="nav-link nav-button" type="button">hola</button>
+          <button class="nav-link nav-button" type="button">Admin</button>
         }
         <!-- <a routerLink="/ubicacion" routerLinkActive="active" class="nav-link">Ubicacion</a> -->
       </nav>
