@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Mapa Media</string>
+    <string name="title_activity_main">Mapa Media</string>
+    <string name="package_name">com.mapamedia.app</string>
+    <string name="custom_url_scheme">com.mapamedia.app</string>
+</resources>
