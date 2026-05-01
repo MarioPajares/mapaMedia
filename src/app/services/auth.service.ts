@@ -1,14 +1,14 @@
 import { Injectable, computed, signal } from '@angular/core';
+import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
 import { Capacitor } from '@capacitor/core';
 import { initializeApp, type FirebaseApp } from 'firebase/app';
 import {
   GoogleAuthProvider,
   browserLocalPersistence,
   getAuth,
-  getRedirectResult,
   onAuthStateChanged,
   setPersistence,
-  signInWithRedirect,
+  signInWithCredential,
   signInWithPopup,
   signOut,
   type Auth,
@@ -53,9 +53,6 @@ export class AuthService {
     this.auth = getAuth(this.app);
     this.provider.setCustomParameters({ prompt: 'select_account' });
     void setPersistence(this.auth, browserLocalPersistence);
-    void getRedirectResult(this.auth).catch((error) => {
-      console.error('Google redirect login error', error);
-    });
 
     onAuthStateChanged(this.auth, (user) => {
       this.user.set(user);
@@ -71,8 +68,14 @@ export class AuthService {
     }
 
     if (Capacitor.isNativePlatform()) {
-      await signInWithRedirect(this.auth, this.provider);
-      return false;
+      const result = await FirebaseAuthentication.signInWithGoogle({ skipNativeAuth: true });
+      const credential = GoogleAuthProvider.credential(
+        result.credential?.idToken,
+        result.credential?.accessToken
+      );
+
+      await signInWithCredential(this.auth, credential);
+      return true;
     }
 
     await signInWithPopup(this.auth, this.provider);
@@ -85,5 +88,9 @@ export class AuthService {
     }
 
     await signOut(this.auth);
+
+    if (Capacitor.isNativePlatform()) {
+      await FirebaseAuthentication.signOut();
+    }
   }
 }

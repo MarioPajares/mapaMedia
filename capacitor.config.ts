@@ -3,7 +3,13 @@ import type { CapacitorConfig } from '@capacitor/cli';
 const config: CapacitorConfig = {
   appId: 'com.mapamedia.app',
   appName: 'Mapa Media',
-  webDir: 'dist/mapa-media/browser'
+  webDir: 'dist/mapa-media/browser',
+  plugins: {
+    FirebaseAuthentication: {
+      skipNativeAuth: true,
+      providers: ['google.com'],
+    },
+  },
 };
 
 export default config;
