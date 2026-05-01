@@ -20,8 +20,11 @@ export class LoginComponent {
     this.isSubmitting.set(true);
 
     try {
-      await this.auth.loginWithGoogle();
-      await this.router.navigateByUrl('/mapa');
+      const shouldNavigate = await this.auth.loginWithGoogle();
+
+      if (shouldNavigate) {
+        await this.router.navigateByUrl('/mapa');
+      }
     } catch {
       this.error.set('No se pudo iniciar sesion con Google.');
     } finally {

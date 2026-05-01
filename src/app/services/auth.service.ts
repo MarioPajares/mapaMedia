@@ -1,11 +1,14 @@
 import { Injectable, computed, signal } from '@angular/core';
+import { Capacitor } from '@capacitor/core';
 import { initializeApp, type FirebaseApp } from 'firebase/app';
 import {
   GoogleAuthProvider,
   browserLocalPersistence,
   getAuth,
+  getRedirectResult,
   onAuthStateChanged,
   setPersistence,
+  signInWithRedirect,
   signInWithPopup,
   signOut,
   type Auth,
@@ -48,7 +51,11 @@ export class AuthService {
 
     this.app = initializeApp(environment.firebase);
     this.auth = getAuth(this.app);
+    this.provider.setCustomParameters({ prompt: 'select_account' });
     void setPersistence(this.auth, browserLocalPersistence);
+    void getRedirectResult(this.auth).catch((error) => {
+      console.error('Google redirect login error', error);
+    });
 
     onAuthStateChanged(this.auth, (user) => {
       this.user.set(user);
@@ -57,13 +64,19 @@ export class AuthService {
     });
   }
 
-  async loginWithGoogle(): Promise<void> {
+  async loginWithGoogle(): Promise<boolean> {
     if (!this.auth) {
       window.alert('Configura Firebase en src/environments/environment.ts para activar Google Login.');
-      return;
+      return false;
+    }
+
+    if (Capacitor.isNativePlatform()) {
+      await signInWithRedirect(this.auth, this.provider);
+      return false;
     }
 
     await signInWithPopup(this.auth, this.provider);
+    return true;
   }
 
   async logout(): Promise<void> {
