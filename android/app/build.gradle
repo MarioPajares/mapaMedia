@@ -38,6 +38,7 @@ dependencies {
     implementation project(':capacitor-android')
     implementation "com.google.firebase:firebase-auth:$firebaseAuthVersion"
     implementation "com.google.firebase:firebase-common:$firebaseCommonVersion"
+    implementation "com.google.android.gms:play-services-location:$playServicesLocationVersion"
     implementation "com.google.android.gms:play-services-auth:$playServicesAuthVersion"
     implementation "androidx.credentials:credentials:$androidxCredentialsVersion"
     implementation "androidx.credentials:credentials-play-services-auth:$androidxCredentialsPlayServicesAuthVersion"
