@@ -1,4 +1,10 @@
 import { Injectable, inject, signal } from '@angular/core';
+import type {
+  BackgroundGeolocationPlugin,
+  CallbackError,
+  Location as BackgroundLocation,
+} from '@capacitor-community/background-geolocation';
+import { Capacitor, registerPlugin } from '@capacitor/core';
 import { FirebaseError, initializeApp, getApps } from 'firebase/app';
 import {
   addDoc,
@@ -15,6 +21,17 @@ import { environment } from '../../environments/environment';
 import { AuthService } from './auth.service';
 
 const ONE_MINUTE_MS = 60_000;
+const BackgroundGeolocation = registerPlugin<BackgroundGeolocationPlugin>('BackgroundGeolocation');
+
+interface GpsPosition {
+  accuracy: number;
+  altitude: number | null;
+  heading: number | null;
+  latitude: number;
+  longitude: number;
+  speed: number | null;
+  timestamp: number;
+}
 
 @Injectable({ providedIn: 'root' })
 export class GpsRecorderService {
@@ -22,7 +39,8 @@ export class GpsRecorderService {
   private readonly db: Firestore;
   private intervalId?: number;
   private watchId?: number;
-  private latestPosition?: GeolocationPosition;
+  private backgroundWatchId?: string;
+  private latestPosition?: GpsPosition;
   private isSaving = false;
   private lastSavedAt = 0;
 
@@ -59,7 +77,7 @@ export class GpsRecorderService {
   }
 
   private async startRecording(): Promise<void> {
-    if (this.intervalId !== undefined || this.watchId !== undefined) {
+    if (this.intervalId !== undefined || this.watchId !== undefined || this.backgroundWatchId !== undefined) {
       return;
     }
 
@@ -89,7 +107,13 @@ export class GpsRecorderService {
 
     this.isRecording.set(true);
     this.status.set('Buscando ubicacion para guardar cada minuto.');
-    this.startPositionWatch();
+
+    if (Capacitor.isNativePlatform()) {
+      await this.startBackgroundPositionWatch();
+      return;
+    }
+
+    this.startBrowserPositionWatch();
 
     this.intervalId = window.setInterval(() => {
       void this.saveLatestPosition();
@@ -100,6 +124,12 @@ export class GpsRecorderService {
     if (this.watchId !== undefined) {
       navigator.geolocation.clearWatch(this.watchId);
       this.watchId = undefined;
+    }
+
+    if (this.backgroundWatchId !== undefined) {
+      const id = this.backgroundWatchId;
+      this.backgroundWatchId = undefined;
+      void BackgroundGeolocation.removeWatcher({ id });
     }
 
     if (this.intervalId !== undefined) {
@@ -114,7 +144,37 @@ export class GpsRecorderService {
     this.status.set('GPS detenido.');
   }
 
-  private startPositionWatch(): void {
+  private async startBackgroundPositionWatch(): Promise<void> {
+    this.backgroundWatchId = await BackgroundGeolocation.addWatcher(
+      {
+        backgroundTitle: 'Mapa Media',
+        backgroundMessage: 'Compartiendo ubicacion en segundo plano.',
+        requestPermissions: true,
+        stale: false,
+        distanceFilter: 0,
+      },
+      (location, error) => {
+        if (error) {
+          this.status.set(this.getBackgroundGeolocationErrorMessage(error));
+          console.error('Background GPS position error', error);
+          return;
+        }
+
+        if (!location) {
+          return;
+        }
+
+        this.latestPosition = this.toGpsPosition(location);
+        this.status.set('GPS activo en segundo plano.');
+
+        if (this.shouldSaveNow()) {
+          void this.saveLatestPosition();
+        }
+      }
+    );
+  }
+
+  private startBrowserPositionWatch(): void {
     if (this.watchId !== undefined) {
       navigator.geolocation.clearWatch(this.watchId);
       this.watchId = undefined;
@@ -122,7 +182,7 @@ export class GpsRecorderService {
 
     this.watchId = navigator.geolocation.watchPosition(
       (position) => {
-        this.latestPosition = position;
+        this.latestPosition = this.toGpsPosition(position);
         this.status.set('Ubicacion lista. Se guardara cada minuto.');
 
         if (this.lastSavedAt === 0) {
@@ -164,12 +224,12 @@ export class GpsRecorderService {
       uid: user.uid,
       displayName: user.displayName ?? user.email ?? 'Usuario',
       email: user.email ?? '',
-      latitude: position.coords.latitude,
-      longitude: position.coords.longitude,
-      accuracy: position.coords.accuracy,
-      altitude: position.coords.altitude,
-      heading: position.coords.heading,
-      speed: position.coords.speed,
+      latitude: position.latitude,
+      longitude: position.longitude,
+      accuracy: position.accuracy,
+      altitude: position.altitude,
+      heading: position.heading,
+      speed: position.speed,
       capturedAtMs: position.timestamp,
       savedAt: serverTimestamp(),
     };
@@ -187,6 +247,36 @@ export class GpsRecorderService {
     }
   }
 
+  private shouldSaveNow(): boolean {
+    return this.lastSavedAt === 0 || Date.now() - this.lastSavedAt >= ONE_MINUTE_MS;
+  }
+
+  private toGpsPosition(position: GeolocationPosition): GpsPosition;
+  private toGpsPosition(position: BackgroundLocation): GpsPosition;
+  private toGpsPosition(position: GeolocationPosition | BackgroundLocation): GpsPosition {
+    if ('coords' in position) {
+      return {
+        accuracy: position.coords.accuracy,
+        altitude: position.coords.altitude,
+        heading: position.coords.heading,
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+        speed: position.coords.speed,
+        timestamp: position.timestamp,
+      };
+    }
+
+    return {
+      accuracy: position.accuracy,
+      altitude: position.altitude,
+      heading: position.bearing,
+      latitude: position.latitude,
+      longitude: position.longitude,
+      speed: position.speed,
+      timestamp: position.time ?? Date.now(),
+    };
+  }
+
   private getGeolocationErrorMessage(error: unknown): string {
     if (this.isGeolocationError(error)) {
       switch (error.code) {
@@ -200,6 +290,18 @@ export class GpsRecorderService {
     }
 
     return 'No se pudo leer la posicion GPS.';
+  }
+
+  private getBackgroundGeolocationErrorMessage(error: CallbackError): string {
+    if (error.code === 'NOT_AUTHORIZED') {
+      return 'Activa el permiso de ubicacion para compartir en segundo plano.';
+    }
+
+    if (error.code === 'LOCATION_DISABLED') {
+      return 'Activa la ubicacion del dispositivo.';
+    }
+
+    return 'No se pudo leer la ubicacion en segundo plano.';
   }
 
   private isGeolocationError(error: unknown): error is GeolocationPositionError {

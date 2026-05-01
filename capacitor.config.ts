@@ -4,6 +4,9 @@ const config: CapacitorConfig = {
   appId: 'com.mapamedia.app',
   appName: 'Mapa Media',
   webDir: 'dist/mapa-media/browser',
+  android: {
+    useLegacyBridge: true,
+  },
   plugins: {
     FirebaseAuthentication: {
       skipNativeAuth: true,
