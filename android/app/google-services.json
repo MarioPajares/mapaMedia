@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "612294659482",
+    "project_id": "mapamedia-139c1",
+    "storage_bucket": "mapamedia-139c1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:612294659482:android:fe429932f26eb11db53e23",
+        "android_client_info": {
+          "package_name": "com.mapamedia.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "612294659482-f7fk05cnsdt690v4h89h0k9mefeiq9fc.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mapamedia.app",
+            "certificate_hash": "c367ec88c251d53c4b34f9b7589f0b75de0516c8"
+          }
+        },
+        {
+          "client_id": "612294659482-qidsurasgf0kgibbvh275ss4bhras01d.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAyRRXRtYg2WIw7AgbKiitp-1pn1fnzHac"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "612294659482-qidsurasgf0kgibbvh275ss4bhras01d.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
