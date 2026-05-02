@@ -4,6 +4,7 @@ import type {
   CallbackError,
   Location as BackgroundLocation,
 } from '@capacitor-community/background-geolocation';
+import { LocalNotifications } from '@capacitor/local-notifications';
 import { Capacitor, registerPlugin } from '@capacitor/core';
 import { FirebaseError, initializeApp, getApps } from 'firebase/app';
 import {
@@ -109,6 +110,7 @@ export class GpsRecorderService {
     this.status.set('Buscando ubicacion para guardar cada minuto.');
 
     if (Capacitor.isNativePlatform()) {
+      await this.requestNativeNotificationPermission();
       await this.startBackgroundPositionWatch();
       return;
     }
@@ -172,6 +174,20 @@ export class GpsRecorderService {
         }
       }
     );
+  }
+
+  private async requestNativeNotificationPermission(): Promise<void> {
+    const permissions = await LocalNotifications.checkPermissions();
+
+    if (permissions.display === 'granted') {
+      return;
+    }
+
+    const requestedPermissions = await LocalNotifications.requestPermissions();
+
+    if (requestedPermissions.display !== 'granted') {
+      this.status.set('Permite las notificaciones para mantener el GPS activo con el movil bloqueado.');
+    }
   }
 
   private startBrowserPositionWatch(): void {
