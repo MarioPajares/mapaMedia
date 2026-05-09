@@ -21,7 +21,7 @@ import {
 import { environment } from '../../environments/environment';
 import { AuthService } from './auth.service';
 
-const ONE_MINUTE_MS = 60_000;
+const SAVE_INTERVAL_MS = 30_000;
 const BackgroundGeolocation = registerPlugin<BackgroundGeolocationPlugin>('BackgroundGeolocation');
 
 interface GpsPosition {
@@ -107,19 +107,18 @@ export class GpsRecorderService {
     }
 
     this.isRecording.set(true);
-    this.status.set('Buscando ubicacion para guardar cada minuto.');
+    this.status.set('Iniciando GPS...');
+
+    this.startBrowserPositionWatch();
+    this.intervalId = window.setInterval(() => {
+      void this.saveLatestPosition();
+    }, SAVE_INTERVAL_MS);
 
     if (Capacitor.isNativePlatform()) {
       await this.requestNativeNotificationPermission();
       await this.startBackgroundPositionWatch();
       return;
     }
-
-    this.startBrowserPositionWatch();
-
-    this.intervalId = window.setInterval(() => {
-      void this.saveLatestPosition();
-    }, ONE_MINUTE_MS);
   }
 
   stop(): void {
@@ -199,7 +198,7 @@ export class GpsRecorderService {
     this.watchId = navigator.geolocation.watchPosition(
       (position) => {
         this.latestPosition = this.toGpsPosition(position);
-        this.status.set('Ubicacion lista. Se guardara cada minuto.');
+        this.status.set('Ubicacion lista.');
 
         if (this.lastSavedAt === 0) {
           void this.saveLatestPosition();
@@ -264,7 +263,7 @@ export class GpsRecorderService {
   }
 
   private shouldSaveNow(): boolean {
-    return this.lastSavedAt === 0 || Date.now() - this.lastSavedAt >= ONE_MINUTE_MS;
+    return this.lastSavedAt === 0 || Date.now() - this.lastSavedAt >= SAVE_INTERVAL_MS;
   }
 
   private toGpsPosition(position: GeolocationPosition): GpsPosition;
