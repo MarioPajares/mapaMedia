@@ -1,7 +1,7 @@
 import { AfterViewInit, Component, ElementRef, OnDestroy, ViewChild, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { FirebaseError, getApps, initializeApp } from 'firebase/app';
-import { doc, getDoc, getFirestore, type Firestore } from 'firebase/firestore';
+import { doc, getFirestore, onSnapshot, type Firestore, type Unsubscribe } from 'firebase/firestore';
 import * as L from 'leaflet';
 
 import { environment } from '../../../environments/environment';
@@ -15,8 +15,6 @@ interface SharedLocation {
   latitude: number;
   longitude: number;
 }
-
-const ONE_MINUTE_MS = 60_000;
 
 @Component({
   selector: 'app-mapa',
@@ -41,7 +39,7 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
   private sharedMarker?: L.Marker;
   private startMarker?: L.CircleMarker;
   private locationWatchId?: number;
-  private latestLocationIntervalId?: number;
+  private sharedLocationUnsubscribe?: Unsubscribe;
   private hasCenteredOnUser = false;
 
   constructor() {
@@ -99,7 +97,7 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
       navigator.geolocation.clearWatch(this.locationWatchId);
     }
 
-    this.stopSharedLocationPolling();
+    this.stopSharedLocationListener();
     this.gpsRecorder.stop();
     this.map?.remove();
   }
@@ -112,8 +110,8 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
       return;
     }
 
-    this.startSharedLocationPolling();
-    this.status.set('Mostrando la ultima ubicacion compartida.');
+    this.startSharedLocationListener();
+    this.status.set('Conectando con la ubicacion compartida.');
   }
 
   protected activateGps(): void {
@@ -139,44 +137,39 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
     this.status.set('GPS desactivado.');
   }
 
-  private startSharedLocationPolling(): void {
-    this.stopSharedLocationPolling();
-    void this.checkSharedLocation();
+  private startSharedLocationListener(): void {
+    this.stopSharedLocationListener();
 
-    this.latestLocationIntervalId = window.setInterval(() => {
-      void this.checkSharedLocation();
-    }, ONE_MINUTE_MS);
+    this.sharedLocationUnsubscribe = onSnapshot(
+      doc(this.db, 'latestLocations', environment.gpsWriterUid),
+      (snapshot) => {
+        if (!snapshot.exists()) {
+          this.clearSharedLocation();
+          this.status.set('Todavia no hay ninguna ubicacion compartida.');
+          return;
+        }
+
+        const location = snapshot.data() as Partial<SharedLocation>;
+
+        if (typeof location.latitude !== 'number' || typeof location.longitude !== 'number') {
+          this.clearSharedLocation();
+          this.status.set('La ultima ubicacion guardada no es valida.');
+          return;
+        }
+
+        this.showSharedLocation(location as SharedLocation);
+      },
+      (error) => {
+        this.status.set(this.getFirestoreReadErrorMessage(error));
+        console.warn('Latest location read error', error);
+      }
+    );
   }
 
-  private stopSharedLocationPolling(): void {
-    if (this.latestLocationIntervalId !== undefined) {
-      window.clearInterval(this.latestLocationIntervalId);
-      this.latestLocationIntervalId = undefined;
-    }
-  }
-
-  private async checkSharedLocation(): Promise<void> {
-    try {
-      const snapshot = await getDoc(doc(this.db, 'latestLocations', environment.gpsWriterUid));
-
-      if (!snapshot.exists()) {
-        this.clearSharedLocation();
-        this.status.set('Todavia no hay ninguna ubicacion compartida.');
-        return;
-      }
-
-      const location = snapshot.data() as Partial<SharedLocation>;
-
-      if (typeof location.latitude !== 'number' || typeof location.longitude !== 'number') {
-        this.clearSharedLocation();
-        this.status.set('La ultima ubicacion guardada no es valida.');
-        return;
-      }
-
-      this.showSharedLocation(location as SharedLocation);
-    } catch (error) {
-      this.status.set(this.getFirestoreReadErrorMessage(error));
-      console.error('Latest location read error', error);
+  private stopSharedLocationListener(): void {
+    if (this.sharedLocationUnsubscribe) {
+      this.sharedLocationUnsubscribe();
+      this.sharedLocationUnsubscribe = undefined;
     }
   }
 
