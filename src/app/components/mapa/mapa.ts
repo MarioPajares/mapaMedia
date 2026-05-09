@@ -35,8 +35,8 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
 
   private map?: L.Map;
   private routeBounds?: L.LatLngBounds;
-  private userMarker?: L.CircleMarker;
-  private sharedMarker?: L.CircleMarker;
+  private userMarker?: L.Marker;
+  private sharedMarker?: L.Marker;
   private startMarker?: L.CircleMarker;
   private locationWatchId?: number;
   private latestLocationIntervalId?: number;
@@ -247,13 +247,7 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
 
     this.userMarker?.remove();
 
-    this.userMarker = L.circleMarker(currentPoint, {
-      radius: 5,
-      color: '#0b4f9c',
-      fillColor: '#1e88ff',
-      fillOpacity: 0.95,
-      weight: 2,
-    }).addTo(this.map!);
+    this.userMarker = this.createLocationMarker(currentPoint).addTo(this.map!);
 
     if (!this.hasCenteredOnUser) {
       const focusBounds = this.routeBounds
@@ -274,13 +268,7 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
 
     this.sharedMarker?.remove();
 
-    this.sharedMarker = L.circleMarker(currentPoint, {
-      radius: 6,
-      color: '#0b4f9c',
-      fillColor: '#1e88ff',
-      fillOpacity: 1,
-      weight: 2,
-    }).addTo(this.map!);
+    this.sharedMarker = this.createLocationMarker(currentPoint).addTo(this.map!);
 
     if (!this.hasCenteredOnUser) {
       this.map?.setView(currentPoint, 16);
@@ -296,6 +284,17 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
     this.sharedMarker?.remove();
     this.sharedMarker = undefined;
     this.hasCenteredOnUser = false;
+  }
+
+  private createLocationMarker(point: L.LatLngTuple): L.Marker {
+    return L.marker(point, {
+      icon: L.divIcon({
+        className: 'location-letter-marker',
+        html: '<span>M</span>',
+        iconSize: [16, 16],
+        iconAnchor: [8, 8],
+      }),
+    });
   }
 
   private getErrorMessage(error: GeolocationPositionError): string {
