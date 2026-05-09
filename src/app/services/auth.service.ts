@@ -61,18 +61,11 @@ export class AuthService {
     });
   }
 
-  async loginAsGpsWriter(): Promise<boolean> {
-    const user = await this.loginWithGoogle();
-
-    if (user.uid !== environment.gpsWriterUid) {
-      await this.logout();
-      return false;
-    }
-
-    return true;
+  async loginWithGoogle(): Promise<User> {
+    return this.signInWithGoogle();
   }
 
-  private async loginWithGoogle(): Promise<User> {
+  private async signInWithGoogle(): Promise<User> {
     if (!this.auth) {
       window.alert('Configura Firebase en src/environments/environment.ts para activar Google Login.');
       throw new Error('Firebase auth is not configured.');
