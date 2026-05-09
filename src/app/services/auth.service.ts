@@ -38,7 +38,7 @@ export class AuthService {
   readonly isReady = signal(!this.configured);
   readonly isLoggedIn = computed(() => this.user() !== null);
   readonly displayName = computed(() => this.user()?.displayName ?? this.user()?.email ?? 'Usuario');
-  readonly canSeeHolaButton = computed(() => this.user()?.uid === environment.gpsWriterUid);
+  readonly isGpsWriter = computed(() => this.user()?.uid === environment.gpsWriterUid);
   readonly ready = new Promise<void>((resolve) => {
     this.resolveReady = resolve;
   });
@@ -61,10 +61,21 @@ export class AuthService {
     });
   }
 
-  async loginWithGoogle(): Promise<boolean> {
+  async loginAsGpsWriter(): Promise<boolean> {
+    const user = await this.loginWithGoogle();
+
+    if (user.uid !== environment.gpsWriterUid) {
+      await this.logout();
+      return false;
+    }
+
+    return true;
+  }
+
+  private async loginWithGoogle(): Promise<User> {
     if (!this.auth) {
       window.alert('Configura Firebase en src/environments/environment.ts para activar Google Login.');
-      return false;
+      throw new Error('Firebase auth is not configured.');
     }
 
     if (Capacitor.isNativePlatform()) {
@@ -74,12 +85,12 @@ export class AuthService {
         result.credential?.accessToken
       );
 
-      await signInWithCredential(this.auth, credential);
-      return true;
+      const userCredential = await signInWithCredential(this.auth, credential);
+      return userCredential.user;
     }
 
-    await signInWithPopup(this.auth, this.provider);
-    return true;
+    const userCredential = await signInWithPopup(this.auth, this.provider);
+    return userCredential.user;
   }
 
   async logout(): Promise<void> {

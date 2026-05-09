@@ -1,13 +1,20 @@
 <main class="login-page">
-  <section class="login-panel" aria-labelledby="login-title">
+  <section class="login-panel">
     <p class="eyebrow">Mapa Media</p>
-    <h1 id="login-title">Inicia sesion para ver el recorrido</h1>
+    <p class="description">
+      El recorrido se puede ver sin iniciar sesion. Google solo se usa para activar la emision GPS.
+    </p>
 
+    <div class="actions">
+      <button class="back-button" type="button" (click)="goBack()">
+        Volver
+      </button>
 
-    <button class="google-button" type="button" (click)="login()" [disabled]="isSubmitting()">
-      <span class="google-mark" aria-hidden="true">G</span>
-      {{ isSubmitting() ? 'Abriendo Google...' : 'Entrar con Google' }}
-    </button>
+      <button class="google-button" type="button" (click)="login()" [disabled]="isSubmitting()">
+        <span class="google-mark" aria-hidden="true">G</span>
+        {{ isSubmitting() ? 'Comprobando cuenta...' : 'Entrar como emisor' }}
+      </button>
+    </div>
 
     @if (error()) {
       <p class="error">{{ error() }}</p>

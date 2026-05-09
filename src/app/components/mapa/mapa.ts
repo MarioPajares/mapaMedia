@@ -1,4 +1,5 @@
 import { AfterViewInit, Component, ElementRef, OnDestroy, ViewChild, computed, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
 import { FirebaseError, getApps, initializeApp } from 'firebase/app';
 import { doc, getDoc, getFirestore, type Firestore } from 'firebase/firestore';
 import * as L from 'leaflet';
@@ -30,7 +31,8 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
   protected readonly isLoading = signal(false);
   protected readonly auth = inject(AuthService);
   protected readonly gpsRecorder = inject(GpsRecorderService);
-  protected readonly isGpsWriter = computed(() => this.auth.user()?.uid === environment.gpsWriterUid);
+  protected readonly isGpsWriter = computed(() => this.auth.isGpsWriter());
+  private readonly router = inject(Router);
   private readonly db: Firestore;
 
   private map?: L.Map;
@@ -117,6 +119,10 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
   protected activateGps(): void {
     this.requestLocation();
     this.gpsRecorder.start();
+  }
+
+  protected loginAsEmitter(): void {
+    void this.router.navigateByUrl('/login');
   }
 
   protected async deactivateGps(): Promise<void> {

@@ -2,6 +2,7 @@ import { inject } from '@angular/core';
 import { CanActivateFn, Router, UrlTree } from '@angular/router';
 
 import { AuthService } from '../services/auth.service';
+import { environment } from '../../environments/environment';
 
 export const authGuard: CanActivateFn = async (): Promise<boolean | UrlTree> => {
   const auth = inject(AuthService);
@@ -18,5 +19,5 @@ export const loginGuard: CanActivateFn = async (): Promise<boolean | UrlTree> =>
 
   await auth.ready;
 
-  return auth.isLoggedIn() ? router.createUrlTree(['/mapa']) : true;
+  return auth.user()?.uid === environment.gpsWriterUid ? router.createUrlTree(['/mapa']) : true;
 };

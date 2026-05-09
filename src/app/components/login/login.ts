@@ -15,15 +15,26 @@ export class LoginComponent {
   protected readonly error = signal('');
   protected readonly isSubmitting = signal(false);
 
+  protected goBack(): void {
+    if (window.history.length > 1) {
+      window.history.back();
+      return;
+    }
+
+    void this.router.navigateByUrl('/mapa');
+  }
+
   protected async login(): Promise<void> {
     this.error.set('');
     this.isSubmitting.set(true);
 
     try {
-      const shouldNavigate = await this.auth.loginWithGoogle();
+      const shouldNavigate = await this.auth.loginAsGpsWriter();
 
       if (shouldNavigate) {
         await this.router.navigateByUrl('/mapa');
+      } else {
+        this.error.set('Esta cuenta no tiene permiso para emitir ubicacion.');
       }
     } catch {
       this.error.set('No se pudo iniciar sesion con Google.');

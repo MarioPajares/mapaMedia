@@ -13,6 +13,12 @@
         </button>
       }
     </div>
+  } @else if (!auth.isLoggedIn()) {
+    <div class="gps-actions">
+      <button class="location-button secondary" type="button" (click)="loginAsEmitter()">
+        Administrador
+      </button>
+    </div>
   }
 
   <!-- <div class="panel">

@@ -4,7 +4,7 @@
       <a routerLink="/mapa" class="brand">Mapa Media</a>
 
       <nav class="nav">
-        @if (auth.canSeeHolaButton()) {
+        @if (auth.isGpsWriter()) {
           <button class="nav-link nav-button" type="button">Admin</button>
         }
         <!-- <a routerLink="/ubicacion" routerLinkActive="active" class="nav-link">Ubicacion</a> -->
