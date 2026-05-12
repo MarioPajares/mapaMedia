@@ -1,35 +1,43 @@
-<section class="mapa-page">
+<section class="mapa-page" [class.emitter-view]="isGpsWriter()">
   @if (isGpsWriter()) {
-    <p class="gps-recorder-status">{{ status() }} · {{ gpsRecorder.status() }}</p>
+    <div class="map-controls">
+      <p class="gps-recorder-status">{{ status() }} · {{ gpsRecorder.status() }}</p>
 
-    <div class="gps-actions">
-      <label class="time-field">
-        <span>Hora de salida</span>
-        <input
-          type="time"
-          [value]="selectedRaceStartTime()"
-          (change)="updateRaceStartTime($event)"
-          [disabled]="gpsRecorder.isRecording()"
-        />
-      </label>
+      <div class="gps-actions">
+        <label class="time-field">
+          <span>Hora de salida</span>
+          <input
+            type="time"
+            [value]="selectedRaceStartTime()"
+            (change)="updateRaceStartTime($event)"
+            [disabled]="gpsRecorder.isRecording()"
+          />
+        </label>
 
-      @if (gpsRecorder.isRecording()) {
-        <button class="location-button danger" type="button" (click)="deactivateGps()">
-          Desactivar
-        </button>
-      } @else {
-        <button class="location-button" type="button" (click)="activateGps()" [disabled]="isLoading()">
-          {{ isLoading() ? 'Activando GPS...' : 'Activar GPS' }}
-        </button>
-      }
+        @if (gpsRecorder.isRecording()) {
+          <button class="location-button danger" type="button" (click)="deactivateGps()">
+            Desactivar
+          </button>
+        } @else {
+          <button class="location-button" type="button" (click)="activateGps()" [disabled]="isLoading()">
+            {{ isLoading() ? 'Activando GPS...' : 'Activar GPS' }}
+          </button>
+        }
+      </div>
     </div>
   } @else if (!auth.isLoggedIn()) {
-    <div class="gps-actions">
-      <button class="location-button secondary" type="button" (click)="loginAsEmitter()">
-        Administrador
-      </button>
-    </div>
+    <details class="options-menu">
+      <summary>Opciones</summary>
+
+      <div class="options-panel">
+        <button class="menu-option" type="button" (click)="loginAsEmitter()">
+          Administrador
+        </button>
+      </div>
+    </details>
   }
+
+  <h1 class="race-title">{{ raceName() }}</h1>
 
   <!-- <div class="panel">
     <p class="eyebrow">Recorrido</p>
@@ -46,7 +54,29 @@
     <p class="status">{{ status() }}</p>
   </div> -->
 
-  <div class="map-card">
-    <div #mapContainer class="map-frame" aria-label="Mapa de la ciudad de Caceres con recorrido GPX"></div>
+  <div class="route-layout">
+    <div class="map-card">
+      <div #mapContainer class="map-frame" aria-label="Mapa de la ciudad de Caceres con recorrido GPX"></div>
+    </div>
+
+    @if (hasElevationProfile()) {
+      <aside class="elevation-card" aria-label="Perfil de desnivel de la carrera">
+        <div class="elevation-header">
+          <p>Desnivel</p>
+          <strong>{{ elevationGain() }} m+</strong>
+        </div>
+
+        <svg class="elevation-chart" viewBox="0 0 320 170" role="img" aria-label="Grafica de elevacion por kilometro">
+          <path class="elevation-area" [attr.d]="elevationAreaPath()"></path>
+          <path class="elevation-line" [attr.d]="elevationPath()"></path>
+        </svg>
+
+        <div class="elevation-stats">
+          <span>{{ elevationMin() }} m</span>
+          <span>{{ elevationMax() }} m</span>
+          <span>{{ elevationDistanceKm().toFixed(1) }} km</span>
+        </div>
+      </aside>
+    }
   </div>
 </section>

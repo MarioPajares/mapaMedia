@@ -4,6 +4,8 @@
 
 .app-shell {
   min-height: 100dvh;
+  background:
+    linear-gradient(180deg, var(--app-bg) 0%, var(--app-bg-soft) 46%, #0f171c 100%);
 }
 
 .topbar {
@@ -14,18 +16,19 @@
   grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: 1rem;
-  padding: 1rem 1.5rem;
-  background: rgba(255, 255, 255, 0.85);
-  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
-  backdrop-filter: blur(12px);
+  padding: 0.8rem 1.5rem;
+  background: rgba(16, 23, 32, 0.82);
+  border-bottom: 1px solid var(--border-soft);
+  box-shadow: 0 14px 34px rgba(5, 10, 18, 0.22);
+  backdrop-filter: blur(16px);
 }
 
 .brand {
-  color: #0f172a;
+  color: var(--text);
   text-decoration: none;
   font-size: 1.05rem;
   font-weight: 800;
-  letter-spacing: -0.03em;
+  letter-spacing: 0;
 }
 
 .nav {
@@ -38,11 +41,11 @@
   padding: 0.65rem 1rem;
   border: 0;
   border-radius: 999px;
-  color: #334155;
+  color: var(--text-muted);
   background: transparent;
   text-decoration: none;
   font: inherit;
-  font-weight: 600;
+  font-weight: 750;
 }
 
 .nav-button {
@@ -50,8 +53,8 @@
 }
 
 .nav-link.active {
-  color: #ffffff;
-  background: #0f172a;
+  color: #07221f;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
 }
 
 .auth-area {
@@ -73,9 +76,9 @@
   min-height: 42px;
   border-radius: 999px;
   padding: 0.65rem 1rem;
-  color: #ffffff;
-  background: #2f9e44;
-  box-shadow: 0 12px 24px rgba(47, 158, 68, 0.22);
+  color: #07221f;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  box-shadow: 0 12px 24px rgba(20, 184, 166, 0.2);
 }
 
 .user-menu {
@@ -83,7 +86,7 @@
 }
 
 .user-menu[open] .user-trigger {
-  background: #eef7ee;
+  background: var(--surface-strong);
 }
 
 .user-trigger {
@@ -94,9 +97,9 @@
   max-width: 240px;
   border-radius: 999px;
   padding: 0.35rem 0.75rem 0.35rem 0.35rem;
-  color: #16351f;
-  background: #ffffff;
-  box-shadow: inset 0 0 0 1px rgba(47, 158, 68, 0.22);
+  color: var(--text);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--border-strong);
   list-style: none;
 }
 
@@ -111,8 +114,9 @@
   height: 32px;
   flex: 0 0 auto;
   border-radius: 50%;
-  color: #ffffff;
-  background: #2f9e44;
+  color: #07221f;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  font-weight: 900;
 }
 
 .user-name {
@@ -128,17 +132,18 @@
   right: 0;
   width: 220px;
   padding: 0.5rem;
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  border-radius: 8px;
-  background: #ffffff;
-  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.16);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-md);
+  background: rgba(27, 35, 48, 0.96);
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(14px);
 }
 
 .menu-name {
   margin: 0;
   padding: 0.65rem 0.75rem;
   overflow: hidden;
-  color: #334155;
+  color: var(--text-muted);
   font-weight: 700;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -146,15 +151,15 @@
 
 .menu-action {
   width: 100%;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   padding: 0.75rem;
-  color: #991b1b;
+  color: #fecdd3;
   background: transparent;
   text-align: left;
 }
 
 .menu-action:hover {
-  background: #fff1f2;
+  background: rgba(225, 29, 72, 0.12);
 }
 
 @media (max-width: 640px) {

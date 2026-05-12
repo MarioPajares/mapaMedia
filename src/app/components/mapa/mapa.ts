@@ -18,6 +18,8 @@ interface SharedLocation {
 }
 
 interface RoutePoint {
+  distanceM: number;
+  elevation?: number;
   point: L.LatLngTuple;
 }
 
@@ -27,10 +29,18 @@ interface DistanceMarker {
   estimatedTime: string;
 }
 
+interface ElevationProfilePoint {
+  distanceM: number;
+  elevation: number;
+}
+
 const DEFAULT_RACE_START_TIME = '19:00';
 const MARKER_INTERVAL_KM = 3;
-const HALF_MARATHON_KM = 21.0975;
+const RACE_LAPS = 2;
 const EARTH_RADIUS_M = 6_371_000;
+const ELEVATION_CHART_WIDTH = 320;
+const ELEVATION_CHART_HEIGHT = 170;
+const ELEVATION_CHART_PADDING = 18;
 const ESTIMATED_PACE_SECONDS_BY_KM = [
   5 * 60 + 10,
   4 * 60 + 54,
@@ -70,6 +80,14 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
   protected readonly gpsRecorder = inject(GpsRecorderService);
   protected readonly isGpsWriter = computed(() => this.auth.isGpsWriter());
   protected readonly selectedRaceStartTime = signal(DEFAULT_RACE_START_TIME);
+  protected readonly raceName = signal('Media Maraton Caceres Patrimonio de la Humanidad 2026');
+  protected readonly elevationPath = signal('');
+  protected readonly elevationAreaPath = signal('');
+  protected readonly elevationMin = signal(0);
+  protected readonly elevationMax = signal(0);
+  protected readonly elevationGain = signal(0);
+  protected readonly elevationDistanceKm = signal(0);
+  protected readonly hasElevationProfile = computed(() => this.elevationPath() !== '');
   private readonly router = inject(Router);
   private readonly db: Firestore;
 
@@ -114,8 +132,8 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
     if (routeLatLngs.length > 0) {
       const route = L.polyline(routeLatLngs, {
         color: '#1368ce',
-        weight: 5,
-        opacity: 0.9,
+        weight: 3,
+        opacity: 0.85,
       }).addTo(this.map);
 
       this.startMarker = L.circleMarker(routeLatLngs[0], {
@@ -278,25 +296,123 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
 
       const gpxText = await response.text();
       const xml = new DOMParser().parseFromString(gpxText, 'application/xml');
+      this.raceName.set(this.getRouteName(xml));
       const trackPoints = Array.from(xml.querySelectorAll('trkpt'));
 
-      return trackPoints
+      const routePoints = trackPoints
         .map((point): RoutePoint | null => {
           const lat = Number(point.getAttribute('lat'));
           const lon = Number(point.getAttribute('lon'));
+          const elevationText = point.querySelector('ele')?.textContent;
+          const elevation = elevationText ? Number(elevationText) : undefined;
 
           if (Number.isNaN(lat) || Number.isNaN(lon)) {
             return null;
           }
 
           return {
+            distanceM: 0,
+            elevation: elevation !== undefined && !Number.isNaN(elevation) ? elevation : undefined,
             point: [lat, lon],
           };
         })
         .filter((point): point is RoutePoint => point !== null);
+
+      this.addCumulativeDistances(routePoints);
+      this.updateElevationProfile(routePoints);
+
+      return routePoints;
     } catch {
       return [];
     }
+  }
+
+  private getRouteName(xml: Document): string {
+    const name = xml.querySelector('metadata > name')?.textContent?.trim() || xml.querySelector('trk > name')?.textContent?.trim();
+
+    return name?.replace(/^Wikiloc - /, '') || this.raceName();
+  }
+
+  private addCumulativeDistances(routePoints: RoutePoint[]): void {
+    for (let index = 1; index < routePoints.length; index += 1) {
+      routePoints[index].distanceM =
+        routePoints[index - 1].distanceM +
+        this.getDistanceBetweenPointsM(routePoints[index - 1].point, routePoints[index].point);
+    }
+  }
+
+  private updateElevationProfile(routePoints: RoutePoint[]): void {
+    const elevationPoints = this.getRaceElevationPoints(routePoints);
+
+    if (elevationPoints.length < 2) {
+      this.elevationPath.set('');
+      this.elevationAreaPath.set('');
+      return;
+    }
+
+    const elevations = elevationPoints.map((point) => point.elevation);
+    const minElevation = Math.floor(Math.min(...elevations));
+    const maxElevation = Math.ceil(Math.max(...elevations));
+    const elevationRange = Math.max(maxElevation - minElevation, 1);
+    const totalDistanceM = this.getRaceDistanceM(routePoints);
+    const chartWidth = ELEVATION_CHART_WIDTH - ELEVATION_CHART_PADDING * 2;
+    const chartHeight = ELEVATION_CHART_HEIGHT - ELEVATION_CHART_PADDING * 2;
+    const coordinates = elevationPoints.map((point) => {
+      const x = ELEVATION_CHART_PADDING + (point.distanceM / totalDistanceM) * chartWidth;
+      const y =
+        ELEVATION_CHART_HEIGHT -
+        ELEVATION_CHART_PADDING -
+        ((point.elevation - minElevation) / elevationRange) * chartHeight;
+
+      return `${x.toFixed(2)},${y.toFixed(2)}`;
+    });
+    const baselineY = ELEVATION_CHART_HEIGHT - ELEVATION_CHART_PADDING;
+    const firstX = ELEVATION_CHART_PADDING;
+    const lastX = ELEVATION_CHART_WIDTH - ELEVATION_CHART_PADDING;
+
+    this.elevationPath.set(`M ${coordinates.join(' L ')}`);
+    this.elevationAreaPath.set(`M ${firstX},${baselineY} L ${coordinates.join(' L ')} L ${lastX},${baselineY} Z`);
+    this.elevationMin.set(minElevation);
+    this.elevationMax.set(maxElevation);
+    this.elevationGain.set(this.getElevationGain(elevationPoints));
+    this.elevationDistanceKm.set(totalDistanceM / 1000);
+  }
+
+  private getElevationGain(elevationPoints: ElevationProfilePoint[]): number {
+    let gain = 0;
+
+    for (let index = 1; index < elevationPoints.length; index += 1) {
+      const previousElevation = elevationPoints[index - 1].elevation;
+      const currentElevation = elevationPoints[index].elevation;
+      gain += Math.max(0, currentElevation - previousElevation);
+    }
+
+    return Math.round(gain);
+  }
+
+  private getRaceElevationPoints(routePoints: RoutePoint[]): ElevationProfilePoint[] {
+    const routeDistanceM = routePoints[routePoints.length - 1]?.distanceM ?? 0;
+
+    if (routeDistanceM === 0) {
+      return [];
+    }
+
+    const elevationPoints: ElevationProfilePoint[] = [];
+
+    for (let lap = 0; lap < RACE_LAPS; lap += 1) {
+      for (const point of routePoints) {
+        if (point.elevation === undefined) {
+          continue;
+        }
+
+        elevationPoints.push({
+          distanceM: lap * routeDistanceM + point.distanceM,
+          elevation: point.elevation,
+        });
+      }
+    }
+
+    return elevationPoints;
   }
 
   private updateDistanceMarkers(): void {
@@ -331,7 +447,7 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
     }
 
     const routeDistanceM = this.getRouteDistanceM(routePoints);
-    const targetDistanceM = Math.max(routeDistanceM, HALF_MARATHON_KM * 1000);
+    const targetDistanceM = routeDistanceM * RACE_LAPS;
     const markerCount = Math.floor(targetDistanceM / (MARKER_INTERVAL_KM * 1000));
     const markers: DistanceMarker[] = [];
 
@@ -362,6 +478,10 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
     }
 
     return distance;
+  }
+
+  private getRaceDistanceM(routePoints: RoutePoint[]): number {
+    return (routePoints[routePoints.length - 1]?.distanceM ?? 0) * RACE_LAPS;
   }
 
   private getPointAtDistance(routePoints: RoutePoint[], targetDistanceM: number): L.LatLngTuple | null {
