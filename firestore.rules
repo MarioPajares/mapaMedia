@@ -17,6 +17,21 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    match /raceConfig/current {
+      allow get, list: if true;
+      allow create, update, delete: if isGpsWriter();
+    }
+
+    match /races/{raceId} {
+      allow get, list: if true;
+      allow create, update, delete: if isGpsWriter();
+    }
+
+    match /activeRace/current {
+      allow get, list: if true;
+      allow create, update, delete: if isGpsWriter();
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

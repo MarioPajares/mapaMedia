@@ -1,29 +1,102 @@
 <section class="mapa-page" [class.emitter-view]="isGpsWriter()">
   @if (isGpsWriter()) {
     <div class="map-controls">
-      <p class="gps-recorder-status">{{ status() }} · {{ gpsRecorder.status() }}</p>
+      @if (adminPanel() === 'existing') {
+        <section class="race-admin-panel">
+          <a class="admin-back-link" routerLink="/mapa">Volver al mapa</a>
+          <h2>Carreras existentes</h2>
+          @for (race of savedRaces(); track race.id) {
+            <article class="race-row">
+              <div>
+                <strong>{{ race.name }}</strong>
+                <span>{{ race.laps || 1 }} vueltas</span>
+              </div>
+              <label class="inline-field">
+                <span>Puntos km</span>
+                <input type="number" min="1" max="50" step="1" [value]="race.markerIntervalKm || 3" (change)="updateSavedRaceMarkerInterval(race.id, $event)" />
+              </label>
+              <button class="race-action activate" type="button" (click)="activateRace(race.id)" [disabled]="!!activeRaceId()">
+                Activar
+              </button>
+              <button class="race-action deactivate" type="button" (click)="deactivateRace(race.id)" [disabled]="activeRaceId() !== race.id">
+                Desactivar
+              </button>
+              <button class="race-action delete" type="button" (click)="deleteRace(race.id)">
+                Eliminar
+              </button>
+            </article>
+          } @empty {
+            <p class="race-empty">No hay carreras guardadas.</p>
+          }
+        </section>
+      } @else if (adminPanel() === 'add') {
+        <section class="race-admin-panel">
+          <a class="admin-back-link" routerLink="/mapa">Volver al mapa</a>
+          <h2>Añadir Carrera</h2>
+          <div class="race-config-form">
+            <label class="config-field name-field">
+              <span>Nombre de la carrera</span>
+              <input type="text" [value]="raceFormName()" (input)="updateRaceName($event)" />
+            </label>
 
-      <div class="gps-actions">
-        <label class="time-field">
-          <span>Hora de salida</span>
-          <input
-            type="time"
-            [value]="selectedRaceStartTime()"
-            (change)="updateRaceStartTime($event)"
-            [disabled]="gpsRecorder.isRecording()"
-          />
-        </label>
+            <label class="config-field laps-field">
+              <span>Vueltas</span>
+              <input type="number" min="1" max="20" step="1" [value]="raceFormLaps()" (input)="updateRaceLaps($event)" />
+            </label>
 
-        @if (gpsRecorder.isRecording()) {
-          <button class="location-button danger" type="button" (click)="deactivateGps()">
-            Desactivar
-          </button>
-        } @else {
-          <button class="location-button" type="button" (click)="activateGps()" [disabled]="isLoading()">
-            {{ isLoading() ? 'Activando GPS...' : 'Activar GPS' }}
-          </button>
-        }
-      </div>
+            <label class="config-field marker-field">
+              <span>Puntos cada km</span>
+              <input type="number" min="1" max="50" step="1" [value]="raceFormMarkerIntervalKm()" (input)="updateRaceMarkerInterval($event)" />
+            </label>
+
+            <label class="file-field">
+              <span class="file-label">Seleccionar GPX</span>
+              <span class="file-name">{{ gpxFileName() || 'Ningun archivo seleccionado' }}</span>
+              <input #gpxFileInput type="file" accept=".gpx,application/gpx+xml,text/xml,application/xml" (change)="updateGpxFile($event)" />
+            </label>
+
+            <button class="location-button secondary" type="button" (click)="saveRaceConfig()" [disabled]="isSavingRaceConfig()">
+              {{ isSavingRaceConfig() ? 'Guardando...' : 'Guardar carrera' }}
+            </button>
+          </div>
+
+          @if (pendingCreatedRaceId()) {
+            <div class="activation-prompt">
+              <span>¿Quieres activar esta carrera?</span>
+              <button class="race-action activate" type="button" (click)="activateRace(pendingCreatedRaceId())">Activar</button>
+              <button class="race-action" type="button" (click)="dismissActivationPrompt()">No</button>
+            </div>
+          }
+        </section>
+      }
+
+      @if (raceConfigStatus()) {
+        <p class="race-config-status">{{ raceConfigStatus() }}</p>
+      }
+
+      @if (!adminPanel()) {
+        <div class="gps-actions">
+          <label class="time-field">
+            <span>Hora de salida</span>
+            <input
+              type="time"
+              [value]="selectedRaceStartTime()"
+              (change)="updateRaceStartTime($event)"
+              [disabled]="gpsRecorder.isRecording()"
+            />
+          </label>
+
+          @if (gpsRecorder.isRecording()) {
+            <button class="location-button danger" type="button" (click)="deactivateGps()">
+              Desactivar
+            </button>
+          } @else {
+            <button class="location-button" type="button" (click)="activateGps()" [disabled]="isLoading()">
+              {{ isLoading() ? 'Activando GPS...' : 'Activar GPS' }}
+            </button>
+          }
+        </div>
+      }
     </div>
   } @else if (!auth.isLoggedIn()) {
     <details class="options-menu">
@@ -37,46 +110,33 @@
     </details>
   }
 
-  <h1 class="race-title">{{ raceName() }}</h1>
+  @if (!adminPanel()) {
+    <h1 class="race-title">{{ raceName() }}</h1>
 
-  <!-- <div class="panel">
-    <p class="eyebrow">Recorrido</p>
-    <h1>Ruta y ubicacion</h1>
-    <p class="description">
-      El recorrido intenta solicitar tu ubicacion automaticamente al abrirse y la superpone
-      sobre el mapa.
-    </p>
+    <div class="route-layout">
+      <div class="map-card">
+        <div #mapContainer class="map-frame" aria-label="Mapa de la ciudad de Caceres con recorrido GPX"></div>
+      </div>
 
-    <button class="location-button" type="button" (click)="requestLocation()" [disabled]="isLoading()">
-      {{ isLoading() ? 'Solicitando permiso...' : 'Mostrar mi ubicacion' }}
-    </button>
+      @if (hasElevationProfile()) {
+        <aside class="elevation-card" aria-label="Perfil de desnivel de la carrera">
+          <div class="elevation-header">
+            <p>Desnivel</p>
+            <strong>{{ elevationGain() }} m+</strong>
+          </div>
 
-    <p class="status">{{ status() }}</p>
-  </div> -->
+          <svg class="elevation-chart" viewBox="0 0 320 90" role="img" aria-label="Grafica de elevacion por kilometro">
+            <path class="elevation-area" [attr.d]="elevationAreaPath()"></path>
+            <path class="elevation-line" [attr.d]="elevationPath()"></path>
+          </svg>
 
-  <div class="route-layout">
-    <div class="map-card">
-      <div #mapContainer class="map-frame" aria-label="Mapa de la ciudad de Caceres con recorrido GPX"></div>
+          <div class="elevation-stats">
+            <span>{{ elevationMin() }} m</span>
+            <span>{{ elevationMax() }} m</span>
+            <span>{{ elevationDistanceKm().toFixed(1) }} km</span>
+          </div>
+        </aside>
+      }
     </div>
-
-    @if (hasElevationProfile()) {
-      <aside class="elevation-card" aria-label="Perfil de desnivel de la carrera">
-        <div class="elevation-header">
-          <p>Desnivel</p>
-          <strong>{{ elevationGain() }} m+</strong>
-        </div>
-
-        <svg class="elevation-chart" viewBox="0 0 320 170" role="img" aria-label="Grafica de elevacion por kilometro">
-          <path class="elevation-area" [attr.d]="elevationAreaPath()"></path>
-          <path class="elevation-line" [attr.d]="elevationPath()"></path>
-        </svg>
-
-        <div class="elevation-stats">
-          <span>{{ elevationMin() }} m</span>
-          <span>{{ elevationMax() }} m</span>
-          <span>{{ elevationDistanceKm().toFixed(1) }} km</span>
-        </div>
-      </aside>
-    }
-  </div>
+  }
 </section>

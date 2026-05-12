@@ -7,7 +7,6 @@
         @if (auth.isGpsWriter()) {
           <button class="nav-link nav-button" type="button">Admin</button>
         }
-        <!-- <a routerLink="/ubicacion" routerLinkActive="active" class="nav-link">Ubicacion</a> -->
       </nav>
 
       <div class="auth-area">
@@ -19,6 +18,10 @@
 
           <div class="menu-panel">
             <p class="menu-name">{{ auth.displayName() }}</p>
+            @if (auth.isGpsWriter()) {
+              <a class="menu-link" routerLink="/mapa" [queryParams]="{ panel: 'existing' }">Carreras existentes</a>
+              <a class="menu-link" routerLink="/mapa" [queryParams]="{ panel: 'add' }">Añadir Carrera</a>
+            }
             <button class="menu-action" type="button" (click)="logout()">Cerrar sesion</button>
           </div>
         </details>

@@ -1,7 +1,21 @@
 import { AfterViewInit, Component, ElementRef, OnDestroy, ViewChild, computed, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FirebaseError, getApps, initializeApp } from 'firebase/app';
-import { doc, getFirestore, onSnapshot, type Firestore, type Unsubscribe } from 'firebase/firestore';
+import {
+  addDoc,
+  collection,
+  deleteDoc,
+  doc,
+  getDoc,
+  getDocs,
+  getFirestore,
+  onSnapshot,
+  serverTimestamp,
+  setDoc,
+  updateDoc,
+  type Firestore,
+  type Unsubscribe,
+} from 'firebase/firestore';
 import * as L from 'leaflet';
 
 import { environment } from '../../../environments/environment';
@@ -34,13 +48,25 @@ interface ElevationProfilePoint {
   elevation: number;
 }
 
+interface RaceConfig {
+  gpxText?: string;
+  laps?: number;
+  markerIntervalKm?: number;
+  name?: string;
+}
+
+interface SavedRace extends RaceConfig {
+  id: string;
+}
+
 const DEFAULT_RACE_START_TIME = '19:00';
-const MARKER_INTERVAL_KM = 3;
-const RACE_LAPS = 2;
+const DEFAULT_MARKER_INTERVAL_KM = 3;
+const DEFAULT_RACE_LAPS = 2;
 const EARTH_RADIUS_M = 6_371_000;
 const ELEVATION_CHART_WIDTH = 320;
-const ELEVATION_CHART_HEIGHT = 170;
-const ELEVATION_CHART_PADDING = 18;
+const ELEVATION_CHART_HEIGHT = 90;
+const ELEVATION_CHART_PADDING = 10;
+const ELEVATION_GAIN_THRESHOLD_M = 2.25;
 const ESTIMATED_PACE_SECONDS_BY_KM = [
   5 * 60 + 10,
   4 * 60 + 54,
@@ -67,12 +93,35 @@ const ESTIMATED_PACE_SECONDS_BY_KM = [
 
 @Component({
   selector: 'app-mapa',
+  imports: [RouterLink],
   standalone: true,
   templateUrl: './mapa.html',
   styleUrl: './mapa.css',
 })
 export class MapaComponent implements AfterViewInit, OnDestroy {
-  @ViewChild('mapContainer', { static: true }) private readonly mapContainer?: ElementRef<HTMLDivElement>;
+  @ViewChild('mapContainer') private set mapContainerRef(container: ElementRef<HTMLDivElement> | undefined) {
+    this.mapContainer = container;
+
+    if (!container) {
+      return;
+    }
+
+    if (this.map && this.map.getContainer() !== container.nativeElement) {
+      this.map.remove();
+      this.map = undefined;
+      this.routeLayer = undefined;
+      this.startMarker = undefined;
+      this.userMarker = undefined;
+      this.sharedMarker = undefined;
+      this.distanceMarkerLayers = [];
+    }
+
+    if (!this.map) {
+      void this.initializeMap();
+    }
+  }
+
+  @ViewChild('gpxFileInput') private readonly gpxFileInput?: ElementRef<HTMLInputElement>;
 
   protected readonly status = signal('Solicitando tu ubicacion al abrir el recorrido...');
   protected readonly isLoading = signal(false);
@@ -81,6 +130,17 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
   protected readonly isGpsWriter = computed(() => this.auth.isGpsWriter());
   protected readonly selectedRaceStartTime = signal(DEFAULT_RACE_START_TIME);
   protected readonly raceName = signal('Media Maraton Caceres Patrimonio de la Humanidad 2026');
+  protected readonly raceFormName = signal('');
+  protected readonly raceFormLaps = signal(DEFAULT_RACE_LAPS);
+  protected readonly raceFormMarkerIntervalKm = signal(DEFAULT_MARKER_INTERVAL_KM);
+  protected readonly gpxFileName = signal('');
+  protected readonly raceConfigStatus = signal('');
+  protected readonly savedRaces = signal<SavedRace[]>([]);
+  protected readonly selectedRaceId = signal('');
+  protected readonly activeRaceId = signal('');
+  protected readonly adminPanel = signal<'existing' | 'add' | ''>('');
+  protected readonly pendingCreatedRaceId = signal('');
+  protected readonly isSavingRaceConfig = signal(false);
   protected readonly elevationPath = signal('');
   protected readonly elevationAreaPath = signal('');
   protected readonly elevationMin = signal(0);
@@ -89,8 +149,10 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
   protected readonly elevationDistanceKm = signal(0);
   protected readonly hasElevationProfile = computed(() => this.elevationPath() !== '');
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly db: Firestore;
 
+  private mapContainer?: ElementRef<HTMLDivElement>;
   private map?: L.Map;
   private routeBounds?: L.LatLngBounds;
   private userMarker?: L.Marker;
@@ -99,18 +161,44 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
   private locationWatchId?: number;
   private sharedLocationUnsubscribe?: Unsubscribe;
   private distanceMarkerLayers: L.Marker[] = [];
+  private routeLayer?: L.Polyline;
   private raceStartTime = DEFAULT_RACE_START_TIME;
+  private raceLaps = DEFAULT_RACE_LAPS;
+  private markerIntervalKm = DEFAULT_MARKER_INTERVAL_KM;
   private routePoints: RoutePoint[] = [];
+  private selectedGpxText = '';
+  private hasEditedRaceFormName = false;
 
   constructor() {
     const app = getApps()[0] ?? initializeApp(environment.firebase);
     this.db = getFirestore(app);
+    this.route.queryParamMap.subscribe((params) => {
+      const panel = params.get('panel');
+      const nextPanel = panel === 'existing' || panel === 'add' ? panel : '';
+      const previousPanel = this.adminPanel();
+      this.adminPanel.set(nextPanel);
+
+      if (nextPanel === 'add' && previousPanel !== 'add') {
+        this.resetRaceForm();
+        this.raceConfigStatus.set('');
+        this.pendingCreatedRaceId.set('');
+      }
+    });
   }
 
   async ngAfterViewInit(): Promise<void> {
+    await this.initializeMap();
+  }
+
+  private async initializeMap(): Promise<void> {
+    if (this.map) {
+      return;
+    }
+
     const container = this.mapContainer?.nativeElement;
 
     if (!container) {
+      await this.loadSavedRaces();
       return;
     }
 
@@ -120,33 +208,15 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
       zoomControl: true,
     });
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap contributors',
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
       maxZoom: 19,
     }).addTo(this.map);
 
     const routePoints = await this.loadRoutePoints();
-    this.routePoints = routePoints;
-    const routeLatLngs = routePoints.map(({ point }) => point);
+    this.renderRoute(routePoints);
 
-    if (routeLatLngs.length > 0) {
-      const route = L.polyline(routeLatLngs, {
-        color: '#1368ce',
-        weight: 3,
-        opacity: 0.85,
-      }).addTo(this.map);
-
-      this.startMarker = L.circleMarker(routeLatLngs[0], {
-        radius: 6,
-        color: '#1b5e20',
-        fillColor: '#2f9e44',
-        fillOpacity: 1,
-        weight: 2,
-      }).addTo(this.map);
-
-      this.updateDistanceMarkers();
-      this.routeBounds = route.getBounds();
-      this.map.fitBounds(this.routeBounds, { padding: [24, 24] });
+    if (routePoints.length > 0) {
       await this.startLocationFeatures();
       return;
     }
@@ -197,6 +267,192 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
 
   protected loginAsEmitter(): void {
     void this.router.navigateByUrl('/login');
+  }
+
+  protected updateRaceName(event: Event): void {
+    const value = event.target instanceof HTMLInputElement ? event.target.value : '';
+    this.hasEditedRaceFormName = true;
+    this.raceFormName.set(value);
+  }
+
+  protected updateRaceLaps(event: Event): void {
+    const value = event.target instanceof HTMLInputElement ? Number(event.target.value) : DEFAULT_RACE_LAPS;
+    this.raceFormLaps.set(this.normalizeRaceLaps(value));
+  }
+
+  protected updateRaceMarkerInterval(event: Event): void {
+    const value = event.target instanceof HTMLInputElement ? Number(event.target.value) : DEFAULT_MARKER_INTERVAL_KM;
+    this.raceFormMarkerIntervalKm.set(this.normalizeMarkerInterval(value));
+  }
+
+  protected async updateSavedRaceMarkerInterval(raceId: string, event: Event): Promise<void> {
+    const markerIntervalKm = this.normalizeMarkerInterval(
+      event.target instanceof HTMLInputElement ? Number(event.target.value) : DEFAULT_MARKER_INTERVAL_KM
+    );
+    const races = this.savedRaces().map((race) => (race.id === raceId ? { ...race, markerIntervalKm } : race));
+    this.savedRaces.set(races);
+    await updateDoc(doc(this.db, 'races', raceId), {
+      markerIntervalKm,
+      updatedAt: serverTimestamp(),
+      updatedBy: this.auth.user()?.uid ?? null,
+    });
+
+    if (this.activeRaceId() === raceId) {
+      const race = races.find((savedRace) => savedRace.id === raceId);
+
+      if (race?.gpxText) {
+        this.applyRaceConfig(race);
+        this.renderRoute(this.parseGpxRoutePoints(race.gpxText, race.name));
+      }
+    }
+
+    this.raceConfigStatus.set('Puntos actualizados.');
+  }
+
+  protected async updateGpxFile(event: Event): Promise<void> {
+    const file = event.target instanceof HTMLInputElement ? event.target.files?.[0] : undefined;
+
+    if (!file) {
+      return;
+    }
+
+    if (!file.name.toLowerCase().endsWith('.gpx')) {
+      this.raceConfigStatus.set('Selecciona un archivo .gpx.');
+      return;
+    }
+
+    this.selectedGpxText = await file.text();
+    const gpxName = this.getRouteName(new DOMParser().parseFromString(this.selectedGpxText, 'application/xml'));
+
+    if (!this.hasEditedRaceFormName || !this.raceFormName().trim()) {
+      this.raceFormName.set(gpxName);
+      this.hasEditedRaceFormName = false;
+    }
+
+    this.gpxFileName.set(file.name);
+    this.raceConfigStatus.set('GPX cargado, listo para guardar.');
+  }
+
+  protected async saveRaceConfig(): Promise<void> {
+    const name = this.raceFormName().trim();
+    const laps = this.normalizeRaceLaps(this.raceFormLaps());
+    const markerIntervalKm = this.normalizeMarkerInterval(this.raceFormMarkerIntervalKm());
+
+    if (!name) {
+      this.raceConfigStatus.set('Indica el nombre de la carrera.');
+      return;
+    }
+
+    if (!this.selectedGpxText) {
+      this.raceConfigStatus.set('Selecciona el archivo GPX.');
+      return;
+    }
+
+    const routePoints = this.parseGpxRoutePoints(this.selectedGpxText, name);
+
+    if (routePoints.length < 2) {
+      this.raceConfigStatus.set('El GPX no tiene puntos validos.');
+      return;
+    }
+
+    this.isSavingRaceConfig.set(true);
+
+    try {
+      const raceDoc = await addDoc(collection(this.db, 'races'), {
+        gpxText: this.selectedGpxText,
+        laps,
+        markerIntervalKm,
+        name,
+        updatedAt: serverTimestamp(),
+        updatedBy: this.auth.user()?.uid ?? null,
+      });
+      this.applyRaceConfig({ gpxText: this.selectedGpxText, laps, markerIntervalKm, name });
+      this.selectedRaceId.set(raceDoc.id);
+      this.pendingCreatedRaceId.set(raceDoc.id);
+      await this.loadSavedRaces();
+      this.renderRoute(routePoints);
+      this.resetRaceForm();
+      this.raceConfigStatus.set('Carrera guardada. ¿Quieres activarla?');
+    } catch (error) {
+      this.raceConfigStatus.set(this.getRaceConfigSaveErrorMessage(error));
+      console.warn('Race config save error', error);
+    } finally {
+      this.isSavingRaceConfig.set(false);
+    }
+  }
+
+  protected async updateSelectedRace(event: Event): Promise<void> {
+    const raceId = event.target instanceof HTMLSelectElement ? event.target.value : '';
+
+    if (!raceId) {
+      return;
+    }
+
+    await this.activateRace(raceId);
+  }
+
+  protected async activateRace(raceId: string): Promise<void> {
+    const race = this.savedRaces().find((savedRace) => savedRace.id === raceId);
+
+    if (!race?.gpxText) {
+      this.raceConfigStatus.set('No se pudo cargar esa carrera.');
+      return;
+    }
+
+    await setDoc(doc(this.db, 'activeRace', 'current'), {
+      raceId,
+      updatedAt: serverTimestamp(),
+      updatedBy: this.auth.user()?.uid ?? null,
+    });
+    this.activeRaceId.set(raceId);
+    this.selectedRaceId.set(raceId);
+    this.pendingCreatedRaceId.set('');
+    this.applyRaceConfig(race);
+    this.renderRoute(this.parseGpxRoutePoints(race.gpxText, race.name));
+    this.raceConfigStatus.set('Carrera activa actualizada.');
+  }
+
+  protected async deactivateRace(raceId: string): Promise<void> {
+    if (this.activeRaceId() !== raceId) {
+      return;
+    }
+
+    await deleteDoc(doc(this.db, 'activeRace', 'current'));
+    this.activeRaceId.set('');
+    this.selectedRaceId.set('');
+    this.clearRoute();
+    this.raceName.set('Actualmente no hay carreras activas');
+    this.raceConfigStatus.set('Carrera desactivada.');
+  }
+
+  protected async deleteRace(raceId: string): Promise<void> {
+    const race = this.savedRaces().find((savedRace) => savedRace.id === raceId);
+
+    if (!race || !window.confirm(`¿Eliminar "${race.name}"?`)) {
+      return;
+    }
+
+    await deleteDoc(doc(this.db, 'races', raceId));
+
+    if (this.activeRaceId() === raceId) {
+      await deleteDoc(doc(this.db, 'activeRace', 'current'));
+      this.activeRaceId.set('');
+      this.selectedRaceId.set('');
+      this.clearRoute();
+      this.raceName.set('Actualmente no hay carreras activas');
+    }
+
+    if (this.pendingCreatedRaceId() === raceId) {
+      this.pendingCreatedRaceId.set('');
+    }
+
+    await this.loadSavedRaces();
+    this.raceConfigStatus.set('Carrera eliminada.');
+  }
+
+  protected dismissActivationPrompt(): void {
+    this.pendingCreatedRaceId.set('');
+    this.raceConfigStatus.set('Carrera guardada.');
   }
 
   protected async deactivateGps(): Promise<void> {
@@ -288,49 +544,175 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
 
   private async loadRoutePoints(): Promise<RoutePoint[]> {
     try {
-      const response = await fetch('/routes/media-maraton-caceres.gpx');
+      await this.loadSavedRaces();
+      const activeSnapshot = await getDoc(doc(this.db, 'activeRace', 'current'));
+      const activeRaceId = activeSnapshot.exists() ? activeSnapshot.data()['raceId'] : '';
 
-      if (!response.ok) {
-        return [];
+      if (typeof activeRaceId === 'string' && activeRaceId) {
+        const activeRace = this.savedRaces().find((race) => race.id === activeRaceId);
+
+        if (activeRace?.gpxText) {
+          this.activeRaceId.set(activeRace.id);
+          this.selectedRaceId.set(activeRace.id);
+          this.applyRaceConfig(activeRace);
+          return this.parseGpxRoutePoints(activeRace.gpxText, activeRace.name);
+        }
       }
 
-      const gpxText = await response.text();
-      const xml = new DOMParser().parseFromString(gpxText, 'application/xml');
-      this.raceName.set(this.getRouteName(xml));
-      const trackPoints = Array.from(xml.querySelectorAll('trkpt'));
-
-      const routePoints = trackPoints
-        .map((point): RoutePoint | null => {
-          const lat = Number(point.getAttribute('lat'));
-          const lon = Number(point.getAttribute('lon'));
-          const elevationText = point.querySelector('ele')?.textContent;
-          const elevation = elevationText ? Number(elevationText) : undefined;
-
-          if (Number.isNaN(lat) || Number.isNaN(lon)) {
-            return null;
-          }
-
-          return {
-            distanceM: 0,
-            elevation: elevation !== undefined && !Number.isNaN(elevation) ? elevation : undefined,
-            point: [lat, lon],
-          };
-        })
-        .filter((point): point is RoutePoint => point !== null);
-
-      this.addCumulativeDistances(routePoints);
-      this.updateElevationProfile(routePoints);
-
-      return routePoints;
+      this.raceName.set('Actualmente no hay carreras activas');
+      return [];
     } catch {
+      this.raceName.set('Actualmente no hay carreras activas');
       return [];
     }
   }
 
+  private async loadSavedRaces(): Promise<void> {
+    const snapshot = await getDocs(collection(this.db, 'races'));
+    const races = snapshot.docs
+      .map((raceDoc): SavedRace => ({ id: raceDoc.id, ...(raceDoc.data() as RaceConfig) }))
+      .filter((race) => typeof race.name === 'string' && typeof race.gpxText === 'string')
+      .sort((first, second) => (first.name ?? '').localeCompare(second.name ?? ''));
+
+    this.savedRaces.set(races);
+  }
+
+  private resetRaceForm(): void {
+    this.raceFormName.set('');
+    this.raceFormLaps.set(DEFAULT_RACE_LAPS);
+    this.raceFormMarkerIntervalKm.set(DEFAULT_MARKER_INTERVAL_KM);
+    this.gpxFileName.set('');
+    this.selectedGpxText = '';
+    this.hasEditedRaceFormName = false;
+
+    if (this.gpxFileInput) {
+      this.gpxFileInput.nativeElement.value = '';
+    }
+  }
+
+  private parseGpxRoutePoints(gpxText: string, configuredName?: string): RoutePoint[] {
+    const xml = new DOMParser().parseFromString(gpxText, 'application/xml');
+    const parsedName = configuredName?.trim() || this.getRouteName(xml);
+    this.raceName.set(parsedName);
+    this.raceFormName.set(parsedName);
+    const trackPoints = Array.from(this.getXmlElements(xml, 'trkpt'));
+
+    const routePoints = trackPoints
+      .map((point): RoutePoint | null => {
+        const lat = Number(point.getAttribute('lat'));
+        const lon = Number(point.getAttribute('lon'));
+        const elevationText = this.getXmlElementText(point, 'ele');
+        const elevation = elevationText ? Number(elevationText) : undefined;
+
+        if (Number.isNaN(lat) || Number.isNaN(lon)) {
+          return null;
+        }
+
+        return {
+          distanceM: 0,
+          elevation: elevation !== undefined && !Number.isNaN(elevation) ? elevation : undefined,
+          point: [lat, lon],
+        };
+      })
+      .filter((point): point is RoutePoint => point !== null);
+
+    this.addCumulativeDistances(routePoints);
+    this.updateElevationProfile(routePoints);
+
+    return routePoints;
+  }
+
+  private applyRaceConfig(config: RaceConfig): void {
+    const name = config.name?.trim();
+    const laps = this.normalizeRaceLaps(config.laps ?? DEFAULT_RACE_LAPS);
+    const markerIntervalKm = this.normalizeMarkerInterval(config.markerIntervalKm ?? DEFAULT_MARKER_INTERVAL_KM);
+
+    if (typeof config.gpxText === 'string' && config.gpxText.trim()) {
+      this.selectedGpxText = config.gpxText;
+      this.gpxFileName.set('GPX guardado');
+    }
+
+    if (name) {
+      this.raceName.set(name);
+      this.raceFormName.set(name);
+    }
+
+    this.raceLaps = laps;
+    this.markerIntervalKm = markerIntervalKm;
+    this.raceFormLaps.set(laps);
+    this.raceFormMarkerIntervalKm.set(markerIntervalKm);
+  }
+
+  private renderRoute(routePoints: RoutePoint[]): void {
+    this.clearMapLayers();
+    this.routePoints = routePoints;
+
+    const routeLatLngs = routePoints.map(({ point }) => point);
+
+    if (!this.map || routeLatLngs.length === 0) {
+      return;
+    }
+
+    this.routeLayer = L.polyline(routeLatLngs, {
+      color: '#1368ce',
+      weight: 3,
+      opacity: 0.85,
+    }).addTo(this.map);
+
+    this.startMarker = L.circleMarker(routeLatLngs[0], {
+      radius: 6,
+      color: '#1b5e20',
+      fillColor: '#2f9e44',
+      fillOpacity: 1,
+      weight: 2,
+    }).addTo(this.map);
+
+    this.updateDistanceMarkers();
+    this.routeBounds = this.routeLayer.getBounds();
+    this.map.fitBounds(this.routeBounds, { padding: [24, 24] });
+  }
+
+  private clearRoute(): void {
+    this.clearMapLayers();
+    this.routePoints = [];
+    this.elevationPath.set('');
+    this.elevationAreaPath.set('');
+  }
+
+  private clearMapLayers(): void {
+    this.routeLayer?.remove();
+    this.routeLayer = undefined;
+    this.startMarker?.remove();
+    this.startMarker = undefined;
+
+    for (const marker of this.distanceMarkerLayers) {
+      marker.remove();
+    }
+
+    this.distanceMarkerLayers = [];
+  }
+
   private getRouteName(xml: Document): string {
-    const name = xml.querySelector('metadata > name')?.textContent?.trim() || xml.querySelector('trk > name')?.textContent?.trim();
+    const name =
+      xml.querySelector('metadata > name')?.textContent?.trim() ||
+      xml.querySelector('trk > name')?.textContent?.trim() ||
+      this.getXmlElementText(xml, 'name')?.trim();
 
     return name?.replace(/^Wikiloc - /, '') || this.raceName();
+  }
+
+  private getXmlElements(parent: Document | Element, tagName: string): Element[] {
+    const directMatches = Array.from(parent.getElementsByTagName(tagName));
+
+    if (directMatches.length > 0) {
+      return directMatches;
+    }
+
+    return Array.from(parent.getElementsByTagNameNS('*', tagName));
+  }
+
+  private getXmlElementText(parent: Document | Element, tagName: string): string | undefined {
+    return this.getXmlElements(parent, tagName)[0]?.textContent?.trim();
   }
 
   private addCumulativeDistances(routePoints: RoutePoint[]): void {
@@ -374,17 +756,26 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
     this.elevationAreaPath.set(`M ${firstX},${baselineY} L ${coordinates.join(' L ')} L ${lastX},${baselineY} Z`);
     this.elevationMin.set(minElevation);
     this.elevationMax.set(maxElevation);
-    this.elevationGain.set(this.getElevationGain(elevationPoints));
+    this.elevationGain.set(this.getElevationGain(routePoints) * this.raceLaps);
     this.elevationDistanceKm.set(totalDistanceM / 1000);
   }
 
-  private getElevationGain(elevationPoints: ElevationProfilePoint[]): number {
+  private getElevationGain(routePoints: RoutePoint[]): number {
     let gain = 0;
 
-    for (let index = 1; index < elevationPoints.length; index += 1) {
-      const previousElevation = elevationPoints[index - 1].elevation;
-      const currentElevation = elevationPoints[index].elevation;
-      gain += Math.max(0, currentElevation - previousElevation);
+    for (let index = 1; index < routePoints.length; index += 1) {
+      const previousElevation = routePoints[index - 1].elevation;
+      const currentElevation = routePoints[index].elevation;
+
+      if (previousElevation === undefined || currentElevation === undefined) {
+        continue;
+      }
+
+      const elevationDelta = currentElevation - previousElevation;
+
+      if (elevationDelta >= ELEVATION_GAIN_THRESHOLD_M) {
+        gain += elevationDelta;
+      }
     }
 
     return Math.round(gain);
@@ -392,6 +783,7 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
 
   private getRaceElevationPoints(routePoints: RoutePoint[]): ElevationProfilePoint[] {
     const routeDistanceM = routePoints[routePoints.length - 1]?.distanceM ?? 0;
+    const hasElevation = routePoints.some((point) => point.elevation !== undefined);
 
     if (routeDistanceM === 0) {
       return [];
@@ -399,15 +791,15 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
 
     const elevationPoints: ElevationProfilePoint[] = [];
 
-    for (let lap = 0; lap < RACE_LAPS; lap += 1) {
+    for (let lap = 0; lap < this.raceLaps; lap += 1) {
       for (const point of routePoints) {
-        if (point.elevation === undefined) {
+        if (point.elevation === undefined && hasElevation) {
           continue;
         }
 
         elevationPoints.push({
           distanceM: lap * routeDistanceM + point.distanceM,
-          elevation: point.elevation,
+          elevation: point.elevation ?? 0,
         });
       }
     }
@@ -447,12 +839,12 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
     }
 
     const routeDistanceM = this.getRouteDistanceM(routePoints);
-    const targetDistanceM = routeDistanceM * RACE_LAPS;
-    const markerCount = Math.floor(targetDistanceM / (MARKER_INTERVAL_KM * 1000));
+    const targetDistanceM = routeDistanceM * this.raceLaps;
+    const markerCount = Math.floor(targetDistanceM / (this.markerIntervalKm * 1000));
     const markers: DistanceMarker[] = [];
 
     for (let markerIndex = 1; markerIndex <= markerCount; markerIndex += 1) {
-      const kilometer = markerIndex * MARKER_INTERVAL_KM;
+      const kilometer = markerIndex * this.markerIntervalKm;
       const distanceIntoRouteM = ((kilometer * 1000) % routeDistanceM) || routeDistanceM;
       const point = this.getPointAtDistance(routePoints, distanceIntoRouteM);
 
@@ -481,7 +873,7 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
   }
 
   private getRaceDistanceM(routePoints: RoutePoint[]): number {
-    return (routePoints[routePoints.length - 1]?.distanceM ?? 0) * RACE_LAPS;
+    return (routePoints[routePoints.length - 1]?.distanceM ?? 0) * this.raceLaps;
   }
 
   private getPointAtDistance(routePoints: RoutePoint[], targetDistanceM: number): L.LatLngTuple | null {
@@ -544,6 +936,22 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
     const [hours, minutes] = this.getRaceStartTimeParts(value);
 
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+  }
+
+  private normalizeRaceLaps(value: number): number {
+    if (!Number.isFinite(value)) {
+      return DEFAULT_RACE_LAPS;
+    }
+
+    return Math.min(20, Math.max(1, Math.round(value)));
+  }
+
+  private normalizeMarkerInterval(value: number): number {
+    if (!Number.isFinite(value)) {
+      return DEFAULT_MARKER_INTERVAL_KM;
+    }
+
+    return Math.min(50, Math.max(1, Math.round(value)));
   }
 
   private getRaceStartTimeParts(value: string): [number, number] {
@@ -635,5 +1043,13 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
     }
 
     return 'No se pudo leer la ultima ubicacion compartida.';
+  }
+
+  private getRaceConfigSaveErrorMessage(error: unknown): string {
+    if (error instanceof FirebaseError && error.code === 'permission-denied') {
+      return 'Firestore rechazo el guardado de la carrera.';
+    }
+
+    return 'No se pudo guardar la carrera.';
   }
 }

@@ -65,6 +65,7 @@
 
 .login-button,
 .user-trigger,
+.menu-link,
 .menu-action {
   border: 0;
   font: inherit;
@@ -149,13 +150,24 @@
   white-space: nowrap;
 }
 
+.menu-link,
 .menu-action {
+  display: block;
   width: 100%;
   border-radius: var(--radius-sm);
   padding: 0.75rem;
-  color: #fecdd3;
+  color: var(--text);
   background: transparent;
+  text-decoration: none;
   text-align: left;
+}
+
+.menu-link:hover {
+  background: rgba(103, 232, 249, 0.1);
+}
+
+.menu-action {
+  color: #fecdd3;
 }
 
 .menu-action:hover {

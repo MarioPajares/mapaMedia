@@ -1,0 +1,292 @@
+[debug] [2026-05-12T10:50:08.090Z] ----------------------------------------------------------------------
+[debug] [2026-05-12T10:50:08.093Z] Command:       /Users/mariopajaresgaleano/.nvm/versions/node/v22.19.0/bin/node /Users/mariopajaresgaleano/.npm/_npx/7750544ccf494d8b/node_modules/.bin/firebase deploy --only firestore:rules
+[debug] [2026-05-12T10:50:08.093Z] CLI Version:   15.17.0
+[debug] [2026-05-12T10:50:08.093Z] Platform:      darwin
+[debug] [2026-05-12T10:50:08.093Z] Node Version:  v22.19.0
+[debug] [2026-05-12T10:50:08.094Z] Time:          Tue May 12 2026 12:50:08 GMT+0200 (Central European Summer Time)
+[debug] [2026-05-12T10:50:08.094Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-05-12T10:50:08.096Z] >>> [apiv2][query] GET https://firebase-public.firebaseio.com/cli.json [none]
+[debug] [2026-05-12T10:50:10.022Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-05-12T10:50:10.023Z] > authorizing via signed-in user (m.pajares96@gmail.com)
+[debug] [2026-05-12T10:50:10.023Z] [iam] checking project mapamedia-139c1 for permissions ["datastore.indexes.create","datastore.indexes.delete","datastore.indexes.list","datastore.indexes.update","firebase.projects.get"]
+[debug] [2026-05-12T10:50:10.024Z] Checked if tokens are valid: false, expires at: 1778327174216
+[debug] [2026-05-12T10:50:10.025Z] Checked if tokens are valid: false, expires at: 1778327174216
+[debug] [2026-05-12T10:50:10.025Z] > refreshing access token with scopes: []
+[debug] [2026-05-12T10:50:10.027Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2026-05-12T10:50:10.027Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-05-12T10:50:10.172Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2026-05-12T10:50:10.173Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-05-12T10:50:10.232Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/mapamedia-139c1:testIamPermissions [none]
+[debug] [2026-05-12T10:50:10.232Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/mapamedia-139c1:testIamPermissions  x-goog-user-project=mapamedia-139c1
+[debug] [2026-05-12T10:50:10.232Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/mapamedia-139c1:testIamPermissions {"permissions":["datastore.indexes.create","datastore.indexes.delete","datastore.indexes.list","datastore.indexes.update","firebase.projects.get"]}
+[debug] [2026-05-12T10:50:10.258Z] <<< [apiv2][status] GET https://firebase-public.firebaseio.com/cli.json 200
+[debug] [2026-05-12T10:50:10.258Z] <<< [apiv2][body] GET https://firebase-public.firebaseio.com/cli.json {"cloudBuildErrorAfter":1594252800000,"cloudBuildWarnAfter":1590019200000,"defaultNode10After":1594252800000,"minVersion":"3.0.5","node8DeploysDisabledAfter":1613390400000,"node8RuntimeDisabledAfter":1615809600000,"node8WarnAfter":1600128000000}
+[debug] [2026-05-12T10:50:11.039Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/mapamedia-139c1:testIamPermissions 200
+[debug] [2026-05-12T10:50:11.039Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/mapamedia-139c1:testIamPermissions {"permissions":["datastore.indexes.create","datastore.indexes.delete","datastore.indexes.list","datastore.indexes.update","firebase.projects.get"]}
+[info] 
+[info] === Deploying to 'mapamedia-139c1'...
+[info] 
+[info] i  deploying firestore 
+[info] i  firestore: ensuring required API firestore.googleapis.com is enabled... 
+[debug] [2026-05-12T10:50:11.046Z] Checked if tokens are valid: true, expires at: 1778586609173
+[debug] [2026-05-12T10:50:11.046Z] Checked if tokens are valid: true, expires at: 1778586609173
+[debug] [2026-05-12T10:50:11.046Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/mapamedia-139c1/services/firestore.googleapis.com [none]
+[debug] [2026-05-12T10:50:11.048Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/mapamedia-139c1/services/firestore.googleapis.com  x-goog-user-project=mapamedia-139c1
+[debug] [2026-05-12T10:50:11.870Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/mapamedia-139c1/services/firestore.googleapis.com 200
+[debug] [2026-05-12T10:50:11.870Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/mapamedia-139c1/services/firestore.googleapis.com [omitted]
+[info] ✔  firestore: required API firestore.googleapis.com is enabled 
+[info] i  firestore: ensuring required API firestore.googleapis.com is enabled... 
+[debug] [2026-05-12T10:50:11.899Z] Checked if tokens are valid: true, expires at: 1778586609173
+[debug] [2026-05-12T10:50:11.900Z] Checked if tokens are valid: true, expires at: 1778586609173
+[debug] [2026-05-12T10:50:11.900Z] >>> [apiv2][query] GET https://firestore.googleapis.com/v1/projects/mapamedia-139c1/databases/(default) [none]
+[debug] [2026-05-12T10:50:12.091Z] <<< [apiv2][status] GET https://firestore.googleapis.com/v1/projects/mapamedia-139c1/databases/(default) 200
+[debug] [2026-05-12T10:50:12.092Z] <<< [apiv2][body] GET https://firestore.googleapis.com/v1/projects/mapamedia-139c1/databases/(default) {"name":"projects/mapamedia-139c1/databases/(default)","uid":"6a7982c1-a47f-4ee9-8e8e-70097f251c30","createTime":"2026-04-29T15:20:11.750962Z","updateTime":"2026-04-29T15:20:11.750962Z","locationId":"eur3","type":"FIRESTORE_NATIVE","concurrencyMode":"PESSIMISTIC","versionRetentionPeriod":"3600s","earliestVersionTime":"2026-05-12T09:50:12.201127Z","appEngineIntegrationMode":"DISABLED","keyPrefix":"e","pointInTimeRecoveryEnablement":"POINT_IN_TIME_RECOVERY_DISABLED","deleteProtectionState":"DELETE_PROTECTION_DISABLED","databaseEdition":"STANDARD","freeTier":true,"realtimeUpdatesMode":"REALTIME_UPDATES_MODE_ENABLED","etag":"IOGhlYXKs5QDMLDr4M6vk5QD"}
+[info] i  cloud.firestore: checking firestore.rules for compilation errors... 
+[debug] [2026-05-12T10:50:12.094Z] Checked if tokens are valid: true, expires at: 1778586609173
+[debug] [2026-05-12T10:50:12.094Z] Checked if tokens are valid: true, expires at: 1778586609173
+[debug] [2026-05-12T10:50:12.094Z] >>> [apiv2][query] POST https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1:test [none]
+[debug] [2026-05-12T10:50:12.094Z] >>> [apiv2][body] POST https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1:test [omitted]
+[debug] [2026-05-12T10:50:12.519Z] <<< [apiv2][status] POST https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1:test 200
+[debug] [2026-05-12T10:50:12.520Z] <<< [apiv2][body] POST https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1:test {}
+[info] ✔  cloud.firestore: rules file firestore.rules compiled successfully 
+[debug] [2026-05-12T10:50:12.522Z] Checked if tokens are valid: true, expires at: 1778586609173
+[debug] [2026-05-12T10:50:12.523Z] Checked if tokens are valid: true, expires at: 1778586609173
+[debug] [2026-05-12T10:50:12.524Z] >>> [apiv2][query] GET https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1/releases pageSize=10&pageToken=
+[debug] [2026-05-12T10:50:12.742Z] <<< [apiv2][status] GET https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1/releases 200
+[debug] [2026-05-12T10:50:12.742Z] <<< [apiv2][body] GET https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1/releases {"releases":[{"name":"projects/mapamedia-139c1/releases/cloud.firestore","rulesetName":"projects/mapamedia-139c1/rulesets/47f49b60-135e-4ab0-9ab4-43cf31c2785e","createTime":"2026-04-29T15:20:14.560234Z","updateTime":"2026-05-09T10:46:24.668508Z"}]}
+[debug] [2026-05-12T10:50:12.743Z] Checked if tokens are valid: true, expires at: 1778586609173
+[debug] [2026-05-12T10:50:12.743Z] Checked if tokens are valid: true, expires at: 1778586609173
+[debug] [2026-05-12T10:50:12.743Z] >>> [apiv2][query] GET https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1/rulesets/47f49b60-135e-4ab0-9ab4-43cf31c2785e [none]
+[debug] [2026-05-12T10:50:13.502Z] <<< [apiv2][status] GET https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1/rulesets/47f49b60-135e-4ab0-9ab4-43cf31c2785e 200
+[debug] [2026-05-12T10:50:13.502Z] <<< [apiv2][body] GET https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1/rulesets/47f49b60-135e-4ab0-9ab4-43cf31c2785e [omitted]
+[info] i  firestore: uploading rules firestore.rules... 
+[debug] [2026-05-12T10:50:13.505Z] Checked if tokens are valid: true, expires at: 1778586609173
+[debug] [2026-05-12T10:50:13.505Z] Checked if tokens are valid: true, expires at: 1778586609173
+[debug] [2026-05-12T10:50:13.505Z] >>> [apiv2][query] POST https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1/rulesets [none]
+[debug] [2026-05-12T10:50:13.505Z] >>> [apiv2][body] POST https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1/rulesets [omitted]
+[debug] [2026-05-12T10:50:13.908Z] <<< [apiv2][status] POST https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1/rulesets 200
+[debug] [2026-05-12T10:50:13.908Z] <<< [apiv2][body] POST https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1/rulesets {"name":"projects/mapamedia-139c1/rulesets/33de9372-9351-4df2-8730-3a566aafbbca","source":{"files":[{"content":"rules_version = '2';\n\nservice cloud.firestore {\n  match /databases/{database}/documents {\n    function isGpsWriter() {\n      return request.auth != null && request.auth.uid == 'WLV40U1oCZhiCTwNn41BBp1jZk93';\n    }\n\n    match /latestLocations/{userId} {\n      allow get, list: if userId == 'WLV40U1oCZhiCTwNn41BBp1jZk93';\n      allow create, update, delete: if isGpsWriter() && userId == request.auth.uid;\n    }\n\n    match /gpsPositions/{userId}/samples/{sampleId} {\n      allow read: if isGpsWriter() && userId == request.auth.uid;\n      allow create: if isGpsWriter() && userId == request.auth.uid;\n      allow update, delete: if false;\n    }\n\n    match /raceConfig/current {\n      allow get, list: if true;\n      allow create, update, delete: if isGpsWriter();\n    }\n\n    match /{document=**} {\n      allow read, write: if false;\n    }\n  }\n}\n","name":"firestore.rules"}]},"createTime":"2026-05-12T10:50:13.936079Z","metadata":{"services":["cloud.firestore"]}}
+[debug] [2026-05-12T10:50:13.908Z] [rules] created ruleset projects/mapamedia-139c1/rulesets/33de9372-9351-4df2-8730-3a566aafbbca
+[debug] [2026-05-12T10:50:13.909Z] [rules] releasing cloud.firestore with ruleset projects/mapamedia-139c1/rulesets/33de9372-9351-4df2-8730-3a566aafbbca
+[debug] [2026-05-12T10:50:13.911Z] Checked if tokens are valid: true, expires at: 1778586609173
+[debug] [2026-05-12T10:50:13.911Z] Checked if tokens are valid: true, expires at: 1778586609173
+[debug] [2026-05-12T10:50:13.911Z] >>> [apiv2][query] PATCH https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1/releases/cloud.firestore [none]
+[debug] [2026-05-12T10:50:13.913Z] >>> [apiv2][body] PATCH https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1/releases/cloud.firestore {"release":{"name":"projects/mapamedia-139c1/releases/cloud.firestore","rulesetName":"projects/mapamedia-139c1/rulesets/33de9372-9351-4df2-8730-3a566aafbbca"}}
+[debug] [2026-05-12T10:50:14.324Z] <<< [apiv2][status] PATCH https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1/releases/cloud.firestore 200
+[debug] [2026-05-12T10:50:14.325Z] <<< [apiv2][body] PATCH https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1/releases/cloud.firestore {"name":"projects/mapamedia-139c1/releases/cloud.firestore","rulesetName":"projects/mapamedia-139c1/rulesets/33de9372-9351-4df2-8730-3a566aafbbca","createTime":"2026-04-29T15:20:14.560234Z","updateTime":"2026-05-12T10:50:14.342845Z"}
+[debug] [2026-05-12T10:50:14.325Z] [rules] updated release projects/mapamedia-139c1/releases/cloud.firestore
+[info] ✔  firestore: released rules firestore.rules to cloud.firestore 
+[info] 
+[info] ✔  Deploy complete! 
+[info] 
+[info] Project Console: https://console.firebase.google.com/project/mapamedia-139c1/overview
+[debug] [2026-05-12T11:14:21.952Z] ----------------------------------------------------------------------
+[debug] [2026-05-12T11:14:21.955Z] Command:       /Users/mariopajaresgaleano/.nvm/versions/node/v22.19.0/bin/node /Users/mariopajaresgaleano/.npm/_npx/7750544ccf494d8b/node_modules/.bin/firebase deploy --only firestore:rules
+[debug] [2026-05-12T11:14:21.955Z] CLI Version:   15.17.0
+[debug] [2026-05-12T11:14:21.955Z] Platform:      darwin
+[debug] [2026-05-12T11:14:21.955Z] Node Version:  v22.19.0
+[debug] [2026-05-12T11:14:21.955Z] Time:          Tue May 12 2026 13:14:21 GMT+0200 (Central European Summer Time)
+[debug] [2026-05-12T11:14:21.956Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-05-12T11:14:24.727Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-05-12T11:14:24.728Z] > authorizing via signed-in user (m.pajares96@gmail.com)
+[debug] [2026-05-12T11:14:24.728Z] [iam] checking project mapamedia-139c1 for permissions ["datastore.indexes.create","datastore.indexes.delete","datastore.indexes.list","datastore.indexes.update","firebase.projects.get"]
+[debug] [2026-05-12T11:14:24.730Z] Checked if tokens are valid: true, expires at: 1778586609173
+[debug] [2026-05-12T11:14:24.730Z] Checked if tokens are valid: true, expires at: 1778586609173
+[debug] [2026-05-12T11:14:24.731Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/mapamedia-139c1:testIamPermissions [none]
+[debug] [2026-05-12T11:14:24.731Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/mapamedia-139c1:testIamPermissions  x-goog-user-project=mapamedia-139c1
+[debug] [2026-05-12T11:14:24.731Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/mapamedia-139c1:testIamPermissions {"permissions":["datastore.indexes.create","datastore.indexes.delete","datastore.indexes.list","datastore.indexes.update","firebase.projects.get"]}
+[debug] [2026-05-12T11:14:25.549Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/mapamedia-139c1:testIamPermissions 200
+[debug] [2026-05-12T11:14:25.550Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/mapamedia-139c1:testIamPermissions {"permissions":["datastore.indexes.create","datastore.indexes.delete","datastore.indexes.list","datastore.indexes.update","firebase.projects.get"]}
+[info] 
+[info] === Deploying to 'mapamedia-139c1'...
+[info] 
+[info] i  deploying firestore 
+[info] i  firestore: ensuring required API firestore.googleapis.com is enabled... 
+[info] i  firestore: ensuring required API firestore.googleapis.com is enabled... 
+[debug] [2026-05-12T11:14:25.580Z] Checked if tokens are valid: true, expires at: 1778586609173
+[debug] [2026-05-12T11:14:25.580Z] Checked if tokens are valid: true, expires at: 1778586609173
+[debug] [2026-05-12T11:14:25.582Z] >>> [apiv2][query] GET https://firestore.googleapis.com/v1/projects/mapamedia-139c1/databases/(default) [none]
+[debug] [2026-05-12T11:14:25.896Z] <<< [apiv2][status] GET https://firestore.googleapis.com/v1/projects/mapamedia-139c1/databases/(default) 200
+[debug] [2026-05-12T11:14:25.897Z] <<< [apiv2][body] GET https://firestore.googleapis.com/v1/projects/mapamedia-139c1/databases/(default) {"name":"projects/mapamedia-139c1/databases/(default)","uid":"6a7982c1-a47f-4ee9-8e8e-70097f251c30","createTime":"2026-04-29T15:20:11.750962Z","updateTime":"2026-04-29T15:20:11.750962Z","locationId":"eur3","type":"FIRESTORE_NATIVE","concurrencyMode":"PESSIMISTIC","versionRetentionPeriod":"3600s","earliestVersionTime":"2026-05-12T10:14:25.998382Z","appEngineIntegrationMode":"DISABLED","keyPrefix":"e","pointInTimeRecoveryEnablement":"POINT_IN_TIME_RECOVERY_DISABLED","deleteProtectionState":"DELETE_PROTECTION_DISABLED","databaseEdition":"STANDARD","freeTier":true,"realtimeUpdatesMode":"REALTIME_UPDATES_MODE_ENABLED","etag":"ILiAsrrPs5QDMLDr4M6vk5QD"}
+[info] i  cloud.firestore: checking firestore.rules for compilation errors... 
+[debug] [2026-05-12T11:14:25.908Z] Checked if tokens are valid: true, expires at: 1778586609173
+[debug] [2026-05-12T11:14:25.908Z] Checked if tokens are valid: true, expires at: 1778586609173
+[debug] [2026-05-12T11:14:25.908Z] >>> [apiv2][query] POST https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1:test [none]
+[debug] [2026-05-12T11:14:25.908Z] >>> [apiv2][body] POST https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1:test [omitted]
+[debug] [2026-05-12T11:14:26.417Z] <<< [apiv2][status] POST https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1:test 200
+[debug] [2026-05-12T11:14:26.417Z] <<< [apiv2][body] POST https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1:test {}
+[info] ✔  cloud.firestore: rules file firestore.rules compiled successfully 
+[debug] [2026-05-12T11:14:26.420Z] Checked if tokens are valid: true, expires at: 1778586609173
+[debug] [2026-05-12T11:14:26.421Z] Checked if tokens are valid: true, expires at: 1778586609173
+[debug] [2026-05-12T11:14:26.421Z] >>> [apiv2][query] GET https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1/releases pageSize=10&pageToken=
+[debug] [2026-05-12T11:14:27.124Z] <<< [apiv2][status] GET https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1/releases 200
+[debug] [2026-05-12T11:14:27.124Z] <<< [apiv2][body] GET https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1/releases {"releases":[{"name":"projects/mapamedia-139c1/releases/cloud.firestore","rulesetName":"projects/mapamedia-139c1/rulesets/33de9372-9351-4df2-8730-3a566aafbbca","createTime":"2026-04-29T15:20:14.560234Z","updateTime":"2026-05-12T10:50:14.342845Z"}]}
+[debug] [2026-05-12T11:14:27.124Z] Checked if tokens are valid: true, expires at: 1778586609173
+[debug] [2026-05-12T11:14:27.125Z] Checked if tokens are valid: true, expires at: 1778586609173
+[debug] [2026-05-12T11:14:27.125Z] >>> [apiv2][query] GET https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1/rulesets/33de9372-9351-4df2-8730-3a566aafbbca [none]
+[debug] [2026-05-12T11:14:27.355Z] <<< [apiv2][status] GET https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1/rulesets/33de9372-9351-4df2-8730-3a566aafbbca 200
+[debug] [2026-05-12T11:14:27.355Z] <<< [apiv2][body] GET https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1/rulesets/33de9372-9351-4df2-8730-3a566aafbbca [omitted]
+[info] i  firestore: uploading rules firestore.rules... 
+[debug] [2026-05-12T11:14:27.362Z] Checked if tokens are valid: true, expires at: 1778586609173
+[debug] [2026-05-12T11:14:27.362Z] Checked if tokens are valid: true, expires at: 1778586609173
+[debug] [2026-05-12T11:14:27.374Z] >>> [apiv2][query] POST https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1/rulesets [none]
+[debug] [2026-05-12T11:14:27.377Z] >>> [apiv2][body] POST https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1/rulesets [omitted]
+[debug] [2026-05-12T11:14:28.306Z] <<< [apiv2][status] POST https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1/rulesets 200
+[debug] [2026-05-12T11:14:28.306Z] <<< [apiv2][body] POST https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1/rulesets {"name":"projects/mapamedia-139c1/rulesets/460a99ed-202c-4c7b-8ceb-350cdb0e9555","source":{"files":[{"content":"rules_version = '2';\n\nservice cloud.firestore {\n  match /databases/{database}/documents {\n    function isGpsWriter() {\n      return request.auth != null && request.auth.uid == 'WLV40U1oCZhiCTwNn41BBp1jZk93';\n    }\n\n    match /latestLocations/{userId} {\n      allow get, list: if userId == 'WLV40U1oCZhiCTwNn41BBp1jZk93';\n      allow create, update, delete: if isGpsWriter() && userId == request.auth.uid;\n    }\n\n    match /gpsPositions/{userId}/samples/{sampleId} {\n      allow read: if isGpsWriter() && userId == request.auth.uid;\n      allow create: if isGpsWriter() && userId == request.auth.uid;\n      allow update, delete: if false;\n    }\n\n    match /raceConfig/current {\n      allow get, list: if true;\n      allow create, update, delete: if isGpsWriter();\n    }\n\n    match /races/{raceId} {\n      allow get, list: if true;\n      allow create, update, delete: if isGpsWriter();\n    }\n\n    match /activeRace/current {\n      allow get, list: if true;\n      allow create, update, delete: if isGpsWriter();\n    }\n\n    match /{document=**} {\n      allow read, write: if false;\n    }\n  }\n}\n","name":"firestore.rules"}]},"createTime":"2026-05-12T11:14:28.224879Z","metadata":{"services":["cloud.firestore"]}}
+[debug] [2026-05-12T11:14:28.306Z] [rules] created ruleset projects/mapamedia-139c1/rulesets/460a99ed-202c-4c7b-8ceb-350cdb0e9555
+[debug] [2026-05-12T11:14:28.307Z] [rules] releasing cloud.firestore with ruleset projects/mapamedia-139c1/rulesets/460a99ed-202c-4c7b-8ceb-350cdb0e9555
+[debug] [2026-05-12T11:14:28.307Z] Checked if tokens are valid: true, expires at: 1778586609173
+[debug] [2026-05-12T11:14:28.307Z] Checked if tokens are valid: true, expires at: 1778586609173
+[debug] [2026-05-12T11:14:28.308Z] >>> [apiv2][query] PATCH https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1/releases/cloud.firestore [none]
+[debug] [2026-05-12T11:14:28.308Z] >>> [apiv2][body] PATCH https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1/releases/cloud.firestore {"release":{"name":"projects/mapamedia-139c1/releases/cloud.firestore","rulesetName":"projects/mapamedia-139c1/rulesets/460a99ed-202c-4c7b-8ceb-350cdb0e9555"}}
+[debug] [2026-05-12T11:14:28.718Z] <<< [apiv2][status] PATCH https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1/releases/cloud.firestore 200
+[debug] [2026-05-12T11:14:28.719Z] <<< [apiv2][body] PATCH https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1/releases/cloud.firestore {"name":"projects/mapamedia-139c1/releases/cloud.firestore","rulesetName":"projects/mapamedia-139c1/rulesets/460a99ed-202c-4c7b-8ceb-350cdb0e9555","createTime":"2026-04-29T15:20:14.560234Z","updateTime":"2026-05-12T11:14:28.724429Z"}
+[debug] [2026-05-12T11:14:28.719Z] [rules] updated release projects/mapamedia-139c1/releases/cloud.firestore
+[info] ✔  firestore: released rules firestore.rules to cloud.firestore 
+[info] 
+[info] ✔  Deploy complete! 
+[info] 
+[info] Project Console: https://console.firebase.google.com/project/mapamedia-139c1/overview
+[debug] [2026-05-12T20:29:15.066Z] ----------------------------------------------------------------------
+[debug] [2026-05-12T20:29:15.070Z] Command:       /Users/mariopajaresgaleano/.nvm/versions/node/v22.19.0/bin/node /Users/mariopajaresgaleano/.npm/_npx/7750544ccf494d8b/node_modules/.bin/firebase deploy --only firestore:rules
+[debug] [2026-05-12T20:29:15.071Z] CLI Version:   15.17.0
+[debug] [2026-05-12T20:29:15.071Z] Platform:      darwin
+[debug] [2026-05-12T20:29:15.071Z] Node Version:  v22.19.0
+[debug] [2026-05-12T20:29:15.072Z] Time:          Tue May 12 2026 22:29:15 GMT+0200 (Central European Summer Time)
+[debug] [2026-05-12T20:29:15.072Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-05-12T20:29:18.026Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-05-12T20:29:18.033Z] > authorizing via signed-in user (m.pajares96@gmail.com)
+[debug] [2026-05-12T20:29:18.034Z] [iam] checking project mapamedia-139c1 for permissions ["datastore.indexes.create","datastore.indexes.delete","datastore.indexes.list","datastore.indexes.update","firebase.projects.get"]
+[debug] [2026-05-12T20:29:18.038Z] Checked if tokens are valid: false, expires at: 1778586609173
+[debug] [2026-05-12T20:29:18.039Z] Checked if tokens are valid: false, expires at: 1778586609173
+[debug] [2026-05-12T20:29:18.039Z] > refreshing access token with scopes: []
+[debug] [2026-05-12T20:29:18.045Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2026-05-12T20:29:18.045Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-05-12T20:29:18.417Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2026-05-12T20:29:18.418Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-05-12T20:29:18.472Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/mapamedia-139c1:testIamPermissions [none]
+[debug] [2026-05-12T20:29:18.472Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/mapamedia-139c1:testIamPermissions  x-goog-user-project=mapamedia-139c1
+[debug] [2026-05-12T20:29:18.472Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/mapamedia-139c1:testIamPermissions {"permissions":["datastore.indexes.create","datastore.indexes.delete","datastore.indexes.list","datastore.indexes.update","firebase.projects.get"]}
+[debug] [2026-05-12T20:29:19.314Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/mapamedia-139c1:testIamPermissions 200
+[debug] [2026-05-12T20:29:19.314Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/mapamedia-139c1:testIamPermissions {"permissions":["datastore.indexes.create","datastore.indexes.delete","datastore.indexes.list","datastore.indexes.update","firebase.projects.get"]}
+[info] 
+[info] === Deploying to 'mapamedia-139c1'...
+[info] 
+[info] i  deploying firestore 
+[info] i  firestore: ensuring required API firestore.googleapis.com is enabled... 
+[info] i  firestore: ensuring required API firestore.googleapis.com is enabled... 
+[debug] [2026-05-12T20:29:19.329Z] Checked if tokens are valid: true, expires at: 1778621357418
+[debug] [2026-05-12T20:29:19.329Z] Checked if tokens are valid: true, expires at: 1778621357418
+[debug] [2026-05-12T20:29:19.330Z] >>> [apiv2][query] GET https://firestore.googleapis.com/v1/projects/mapamedia-139c1/databases/(default) [none]
+[debug] [2026-05-12T20:29:19.489Z] <<< [apiv2][status] GET https://firestore.googleapis.com/v1/projects/mapamedia-139c1/databases/(default) 200
+[debug] [2026-05-12T20:29:19.489Z] <<< [apiv2][body] GET https://firestore.googleapis.com/v1/projects/mapamedia-139c1/databases/(default) {"name":"projects/mapamedia-139c1/databases/(default)","uid":"6a7982c1-a47f-4ee9-8e8e-70097f251c30","createTime":"2026-04-29T15:20:11.750962Z","updateTime":"2026-04-29T15:20:11.750962Z","locationId":"eur3","type":"FIRESTORE_NATIVE","concurrencyMode":"PESSIMISTIC","versionRetentionPeriod":"3600s","earliestVersionTime":"2026-05-12T19:29:19.552267Z","appEngineIntegrationMode":"DISABLED","keyPrefix":"e","pointInTimeRecoveryEnablement":"POINT_IN_TIME_RECOVERY_DISABLED","deleteProtectionState":"DELETE_PROTECTION_DISABLED","databaseEdition":"STANDARD","freeTier":true,"realtimeUpdatesMode":"REALTIME_UPDATES_MODE_ENABLED","etag":"IOCh/73LtJQDMLDr4M6vk5QD"}
+[info] i  cloud.firestore: checking firestore.rules for compilation errors... 
+[debug] [2026-05-12T20:29:19.492Z] Checked if tokens are valid: true, expires at: 1778621357418
+[debug] [2026-05-12T20:29:19.492Z] Checked if tokens are valid: true, expires at: 1778621357418
+[debug] [2026-05-12T20:29:19.493Z] >>> [apiv2][query] POST https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1:test [none]
+[debug] [2026-05-12T20:29:19.493Z] >>> [apiv2][body] POST https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1:test [omitted]
+[debug] [2026-05-12T20:29:20.398Z] <<< [apiv2][status] POST https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1:test 200
+[debug] [2026-05-12T20:29:20.398Z] <<< [apiv2][body] POST https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1:test {}
+[info] ✔  cloud.firestore: rules file firestore.rules compiled successfully 
+[debug] [2026-05-12T20:29:20.401Z] Checked if tokens are valid: true, expires at: 1778621357418
+[debug] [2026-05-12T20:29:20.401Z] Checked if tokens are valid: true, expires at: 1778621357418
+[debug] [2026-05-12T20:29:20.403Z] >>> [apiv2][query] GET https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1/releases pageSize=10&pageToken=
+[debug] [2026-05-12T20:29:21.101Z] <<< [apiv2][status] GET https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1/releases 200
+[debug] [2026-05-12T20:29:21.101Z] <<< [apiv2][body] GET https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1/releases {"releases":[{"name":"projects/mapamedia-139c1/releases/cloud.firestore","rulesetName":"projects/mapamedia-139c1/rulesets/460a99ed-202c-4c7b-8ceb-350cdb0e9555","createTime":"2026-04-29T15:20:14.560234Z","updateTime":"2026-05-12T11:14:28.724429Z"}]}
+[debug] [2026-05-12T20:29:21.102Z] Checked if tokens are valid: true, expires at: 1778621357418
+[debug] [2026-05-12T20:29:21.102Z] Checked if tokens are valid: true, expires at: 1778621357418
+[debug] [2026-05-12T20:29:21.104Z] >>> [apiv2][query] GET https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1/rulesets/460a99ed-202c-4c7b-8ceb-350cdb0e9555 [none]
+[debug] [2026-05-12T20:29:21.868Z] <<< [apiv2][status] GET https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1/rulesets/460a99ed-202c-4c7b-8ceb-350cdb0e9555 200
+[debug] [2026-05-12T20:29:21.869Z] <<< [apiv2][body] GET https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1/rulesets/460a99ed-202c-4c7b-8ceb-350cdb0e9555 [omitted]
+[info] i  firestore: uploading rules firestore.rules... 
+[debug] [2026-05-12T20:29:21.871Z] Checked if tokens are valid: true, expires at: 1778621357418
+[debug] [2026-05-12T20:29:21.871Z] Checked if tokens are valid: true, expires at: 1778621357418
+[debug] [2026-05-12T20:29:21.871Z] >>> [apiv2][query] POST https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1/rulesets [none]
+[debug] [2026-05-12T20:29:21.871Z] >>> [apiv2][body] POST https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1/rulesets [omitted]
+[debug] [2026-05-12T20:29:22.746Z] <<< [apiv2][status] POST https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1/rulesets 200
+[debug] [2026-05-12T20:29:22.747Z] <<< [apiv2][body] POST https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1/rulesets {"name":"projects/mapamedia-139c1/rulesets/c99b6097-03c9-4a25-ae39-cb127a83f58d","source":{"files":[{"content":"rules_version = '2';\n\nservice cloud.firestore {\n  match /databases/{database}/documents {\n    function isGpsWriter() {\n      return request.auth != null && request.auth.uid == 'WLV40U1oCZhiCTwNn41BBp1jZk93';\n    }\n\n    match /latestLocations/{userId} {\n      allow get, list: if userId == 'WLV40U1oCZhiCTwNn41BBp1jZk93';\n      allow create, update, delete: if isGpsWriter() && userId == request.auth.uid;\n    }\n\n    match /gpsPositions/{userId}/samples/{sampleId} {\n      allow read: if isGpsWriter() && userId == request.auth.uid;\n      allow create: if isGpsWriter() && userId == request.auth.uid;\n      allow update, delete: if false;\n    }\n\n    match /gpsSharing/{userId} {\n      allow get, list: if userId == 'WLV40U1oCZhiCTwNn41BBp1jZk93';\n      allow create, update, delete: if isGpsWriter() && userId == request.auth.uid;\n    }\n\n    match /raceConfig/current {\n      allow get, list: if true;\n      allow create, update, delete: if isGpsWriter();\n    }\n\n    match /races/{raceId} {\n      allow get, list: if true;\n      allow create, update, delete: if isGpsWriter();\n    }\n\n    match /activeRace/current {\n      allow get, list: if true;\n      allow create, update, delete: if isGpsWriter();\n    }\n\n    match /{document=**} {\n      allow read, write: if false;\n    }\n  }\n}\n","name":"firestore.rules"}]},"createTime":"2026-05-12T20:29:22.740047Z","metadata":{"services":["cloud.firestore"]}}
+[debug] [2026-05-12T20:29:22.747Z] [rules] created ruleset projects/mapamedia-139c1/rulesets/c99b6097-03c9-4a25-ae39-cb127a83f58d
+[debug] [2026-05-12T20:29:22.755Z] [rules] releasing cloud.firestore with ruleset projects/mapamedia-139c1/rulesets/c99b6097-03c9-4a25-ae39-cb127a83f58d
+[debug] [2026-05-12T20:29:22.756Z] Checked if tokens are valid: true, expires at: 1778621357418
+[debug] [2026-05-12T20:29:22.756Z] Checked if tokens are valid: true, expires at: 1778621357418
+[debug] [2026-05-12T20:29:22.756Z] >>> [apiv2][query] PATCH https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1/releases/cloud.firestore [none]
+[debug] [2026-05-12T20:29:22.756Z] >>> [apiv2][body] PATCH https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1/releases/cloud.firestore {"release":{"name":"projects/mapamedia-139c1/releases/cloud.firestore","rulesetName":"projects/mapamedia-139c1/rulesets/c99b6097-03c9-4a25-ae39-cb127a83f58d"}}
+[debug] [2026-05-12T20:29:23.624Z] <<< [apiv2][status] PATCH https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1/releases/cloud.firestore 200
+[debug] [2026-05-12T20:29:23.624Z] <<< [apiv2][body] PATCH https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1/releases/cloud.firestore {"name":"projects/mapamedia-139c1/releases/cloud.firestore","rulesetName":"projects/mapamedia-139c1/rulesets/c99b6097-03c9-4a25-ae39-cb127a83f58d","createTime":"2026-04-29T15:20:14.560234Z","updateTime":"2026-05-12T20:29:23.622238Z"}
+[debug] [2026-05-12T20:29:23.624Z] [rules] updated release projects/mapamedia-139c1/releases/cloud.firestore
+[info] ✔  firestore: released rules firestore.rules to cloud.firestore 
+[info] 
+[info] ✔  Deploy complete! 
+[info] 
+[info] Project Console: https://console.firebase.google.com/project/mapamedia-139c1/overview
+[debug] [2026-05-12T20:32:47.200Z] ----------------------------------------------------------------------
+[debug] [2026-05-12T20:32:47.205Z] Command:       /Users/mariopajaresgaleano/.nvm/versions/node/v22.19.0/bin/node /Users/mariopajaresgaleano/.npm/_npx/7750544ccf494d8b/node_modules/.bin/firebase deploy --only firestore:rules
+[debug] [2026-05-12T20:32:47.206Z] CLI Version:   15.17.0
+[debug] [2026-05-12T20:32:47.206Z] Platform:      darwin
+[debug] [2026-05-12T20:32:47.206Z] Node Version:  v22.19.0
+[debug] [2026-05-12T20:32:47.207Z] Time:          Tue May 12 2026 22:32:47 GMT+0200 (Central European Summer Time)
+[debug] [2026-05-12T20:32:47.207Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-05-12T20:32:50.638Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-05-12T20:32:50.639Z] > authorizing via signed-in user (m.pajares96@gmail.com)
+[debug] [2026-05-12T20:32:50.640Z] [iam] checking project mapamedia-139c1 for permissions ["datastore.indexes.create","datastore.indexes.delete","datastore.indexes.list","datastore.indexes.update","firebase.projects.get"]
+[debug] [2026-05-12T20:32:50.642Z] Checked if tokens are valid: true, expires at: 1778621357418
+[debug] [2026-05-12T20:32:50.642Z] Checked if tokens are valid: true, expires at: 1778621357418
+[debug] [2026-05-12T20:32:50.643Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/mapamedia-139c1:testIamPermissions [none]
+[debug] [2026-05-12T20:32:50.644Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/mapamedia-139c1:testIamPermissions  x-goog-user-project=mapamedia-139c1
+[debug] [2026-05-12T20:32:50.644Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/mapamedia-139c1:testIamPermissions {"permissions":["datastore.indexes.create","datastore.indexes.delete","datastore.indexes.list","datastore.indexes.update","firebase.projects.get"]}
+[debug] [2026-05-12T20:32:51.542Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/mapamedia-139c1:testIamPermissions 200
+[debug] [2026-05-12T20:32:51.543Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/mapamedia-139c1:testIamPermissions {"permissions":["datastore.indexes.create","datastore.indexes.delete","datastore.indexes.list","datastore.indexes.update","firebase.projects.get"]}
+[info] 
+[info] === Deploying to 'mapamedia-139c1'...
+[info] 
+[info] i  deploying firestore 
+[info] i  firestore: ensuring required API firestore.googleapis.com is enabled... 
+[info] i  firestore: ensuring required API firestore.googleapis.com is enabled... 
+[debug] [2026-05-12T20:32:51.557Z] Checked if tokens are valid: true, expires at: 1778621357418
+[debug] [2026-05-12T20:32:51.558Z] Checked if tokens are valid: true, expires at: 1778621357418
+[debug] [2026-05-12T20:32:51.558Z] >>> [apiv2][query] GET https://firestore.googleapis.com/v1/projects/mapamedia-139c1/databases/(default) [none]
+[debug] [2026-05-12T20:32:51.827Z] <<< [apiv2][status] GET https://firestore.googleapis.com/v1/projects/mapamedia-139c1/databases/(default) 200
+[debug] [2026-05-12T20:32:51.827Z] <<< [apiv2][body] GET https://firestore.googleapis.com/v1/projects/mapamedia-139c1/databases/(default) {"name":"projects/mapamedia-139c1/databases/(default)","uid":"6a7982c1-a47f-4ee9-8e8e-70097f251c30","createTime":"2026-04-29T15:20:11.750962Z","updateTime":"2026-04-29T15:20:11.750962Z","locationId":"eur3","type":"FIRESTORE_NATIVE","concurrencyMode":"PESSIMISTIC","versionRetentionPeriod":"3600s","earliestVersionTime":"2026-05-12T19:32:51.898139Z","appEngineIntegrationMode":"DISABLED","keyPrefix":"e","pointInTimeRecoveryEnablement":"POINT_IN_TIME_RECOVERY_DISABLED","deleteProtectionState":"DELETE_PROTECTION_DISABLED","databaseEdition":"STANDARD","freeTier":true,"realtimeUpdatesMode":"REALTIME_UPDATES_MODE_ENABLED","etag":"IOTpn6PMtJQDMLDr4M6vk5QD"}
+[info] i  cloud.firestore: checking firestore.rules for compilation errors... 
+[debug] [2026-05-12T20:32:51.831Z] Checked if tokens are valid: true, expires at: 1778621357418
+[debug] [2026-05-12T20:32:51.831Z] Checked if tokens are valid: true, expires at: 1778621357418
+[debug] [2026-05-12T20:32:51.831Z] >>> [apiv2][query] POST https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1:test [none]
+[debug] [2026-05-12T20:32:51.832Z] >>> [apiv2][body] POST https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1:test [omitted]
+[debug] [2026-05-12T20:32:52.640Z] <<< [apiv2][status] POST https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1:test 200
+[debug] [2026-05-12T20:32:52.641Z] <<< [apiv2][body] POST https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1:test {}
+[info] ✔  cloud.firestore: rules file firestore.rules compiled successfully 
+[debug] [2026-05-12T20:32:52.651Z] Checked if tokens are valid: true, expires at: 1778621357418
+[debug] [2026-05-12T20:32:52.657Z] Checked if tokens are valid: true, expires at: 1778621357418
+[debug] [2026-05-12T20:32:52.673Z] >>> [apiv2][query] GET https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1/releases pageSize=10&pageToken=
+[debug] [2026-05-12T20:32:53.353Z] <<< [apiv2][status] GET https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1/releases 200
+[debug] [2026-05-12T20:32:53.354Z] <<< [apiv2][body] GET https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1/releases {"releases":[{"name":"projects/mapamedia-139c1/releases/cloud.firestore","rulesetName":"projects/mapamedia-139c1/rulesets/c99b6097-03c9-4a25-ae39-cb127a83f58d","createTime":"2026-04-29T15:20:14.560234Z","updateTime":"2026-05-12T20:29:23.622238Z"}]}
+[debug] [2026-05-12T20:32:53.354Z] Checked if tokens are valid: true, expires at: 1778621357418
+[debug] [2026-05-12T20:32:53.354Z] Checked if tokens are valid: true, expires at: 1778621357418
+[debug] [2026-05-12T20:32:53.354Z] >>> [apiv2][query] GET https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1/rulesets/c99b6097-03c9-4a25-ae39-cb127a83f58d [none]
+[debug] [2026-05-12T20:32:54.137Z] <<< [apiv2][status] GET https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1/rulesets/c99b6097-03c9-4a25-ae39-cb127a83f58d 200
+[debug] [2026-05-12T20:32:54.137Z] <<< [apiv2][body] GET https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1/rulesets/c99b6097-03c9-4a25-ae39-cb127a83f58d [omitted]
+[info] i  firestore: uploading rules firestore.rules... 
+[debug] [2026-05-12T20:32:54.138Z] Checked if tokens are valid: true, expires at: 1778621357418
+[debug] [2026-05-12T20:32:54.138Z] Checked if tokens are valid: true, expires at: 1778621357418
+[debug] [2026-05-12T20:32:54.139Z] >>> [apiv2][query] POST https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1/rulesets [none]
+[debug] [2026-05-12T20:32:54.139Z] >>> [apiv2][body] POST https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1/rulesets [omitted]
+[debug] [2026-05-12T20:32:54.953Z] <<< [apiv2][status] POST https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1/rulesets 200
+[debug] [2026-05-12T20:32:54.954Z] <<< [apiv2][body] POST https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1/rulesets {"name":"projects/mapamedia-139c1/rulesets/a20b7a1d-4ac6-4064-b897-4117dd1ce98c","source":{"files":[{"content":"rules_version = '2';\n\nservice cloud.firestore {\n  match /databases/{database}/documents {\n    function isGpsWriter() {\n      return request.auth != null && request.auth.uid == 'WLV40U1oCZhiCTwNn41BBp1jZk93';\n    }\n\n    match /latestLocations/{userId} {\n      allow get, list: if userId == 'WLV40U1oCZhiCTwNn41BBp1jZk93';\n      allow create, update, delete: if isGpsWriter() && userId == request.auth.uid;\n    }\n\n    match /gpsPositions/{userId}/samples/{sampleId} {\n      allow read: if isGpsWriter() && userId == request.auth.uid;\n      allow create: if isGpsWriter() && userId == request.auth.uid;\n      allow update, delete: if false;\n    }\n\n    match /raceConfig/current {\n      allow get, list: if true;\n      allow create, update, delete: if isGpsWriter();\n    }\n\n    match /races/{raceId} {\n      allow get, list: if true;\n      allow create, update, delete: if isGpsWriter();\n    }\n\n    match /activeRace/current {\n      allow get, list: if true;\n      allow create, update, delete: if isGpsWriter();\n    }\n\n    match /{document=**} {\n      allow read, write: if false;\n    }\n  }\n}\n","name":"firestore.rules"}]},"createTime":"2026-05-12T20:32:54.954623Z","metadata":{"services":["cloud.firestore"]}}
+[debug] [2026-05-12T20:32:54.954Z] [rules] created ruleset projects/mapamedia-139c1/rulesets/a20b7a1d-4ac6-4064-b897-4117dd1ce98c
+[debug] [2026-05-12T20:32:54.954Z] [rules] releasing cloud.firestore with ruleset projects/mapamedia-139c1/rulesets/a20b7a1d-4ac6-4064-b897-4117dd1ce98c
+[debug] [2026-05-12T20:32:54.955Z] Checked if tokens are valid: true, expires at: 1778621357418
+[debug] [2026-05-12T20:32:54.955Z] Checked if tokens are valid: true, expires at: 1778621357418
+[debug] [2026-05-12T20:32:54.956Z] >>> [apiv2][query] PATCH https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1/releases/cloud.firestore [none]
+[debug] [2026-05-12T20:32:54.956Z] >>> [apiv2][body] PATCH https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1/releases/cloud.firestore {"release":{"name":"projects/mapamedia-139c1/releases/cloud.firestore","rulesetName":"projects/mapamedia-139c1/rulesets/a20b7a1d-4ac6-4064-b897-4117dd1ce98c"}}
+[debug] [2026-05-12T20:32:55.821Z] <<< [apiv2][status] PATCH https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1/releases/cloud.firestore 200
+[debug] [2026-05-12T20:32:55.821Z] <<< [apiv2][body] PATCH https://firebaserules.googleapis.com/v1/projects/mapamedia-139c1/releases/cloud.firestore {"name":"projects/mapamedia-139c1/releases/cloud.firestore","rulesetName":"projects/mapamedia-139c1/rulesets/a20b7a1d-4ac6-4064-b897-4117dd1ce98c","createTime":"2026-04-29T15:20:14.560234Z","updateTime":"2026-05-12T20:32:55.824038Z"}
+[debug] [2026-05-12T20:32:55.822Z] [rules] updated release projects/mapamedia-139c1/releases/cloud.firestore
+[info] ✔  firestore: released rules firestore.rules to cloud.firestore 
+[info] 
+[info] ✔  Deploy complete! 
+[info] 
+[info] Project Console: https://console.firebase.google.com/project/mapamedia-139c1/overview
