@@ -3,6 +3,16 @@
     <p class="gps-recorder-status">{{ status() }} · {{ gpsRecorder.status() }}</p>
 
     <div class="gps-actions">
+      <label class="time-field">
+        <span>Hora de salida</span>
+        <input
+          type="time"
+          [value]="selectedRaceStartTime()"
+          (change)="updateRaceStartTime($event)"
+          [disabled]="gpsRecorder.isRecording()"
+        />
+      </label>
+
       @if (gpsRecorder.isRecording()) {
         <button class="location-button danger" type="button" (click)="deactivateGps()">
           Desactivar

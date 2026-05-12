@@ -31,8 +31,36 @@
 }
 
 .gps-actions {
+  display: flex;
+  align-items: end;
+  gap: 0.75rem;
+  flex-wrap: wrap;
   width: min(1100px, 80%);
   margin: 0 auto 1rem;
+}
+
+.time-field {
+  display: grid;
+  gap: 0.35rem;
+  color: #31572c;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.time-field input {
+  min-height: 2.95rem;
+  border: 1px solid rgba(47, 158, 68, 0.24);
+  border-radius: 999px;
+  padding: 0 1rem;
+  color: #16351f;
+  background: #ffffff;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.time-field input:disabled {
+  opacity: 0.7;
 }
 
 .eyebrow {
@@ -132,6 +160,23 @@ h1 {
   line-height: 1;
 }
 
+:host ::ng-deep .distance-marker {
+  display: grid;
+  place-items: center;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  color: #ffffff;
+  background: #0f172a;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.3);
+}
+
+:host ::ng-deep .distance-marker span {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
 @media (max-width: 720px) {
   .mapa-page {
     padding: 1rem 0;
@@ -143,6 +188,8 @@ h1 {
 
   .gps-actions {
     width: 100%;
+    box-sizing: border-box;
+    padding: 0 1rem;
   }
 
   .map-frame {

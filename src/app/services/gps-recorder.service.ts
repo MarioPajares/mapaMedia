@@ -22,6 +22,7 @@ import { environment } from '../../environments/environment';
 import { AuthService } from './auth.service';
 
 const SAVE_INTERVAL_MS = 30_000;
+const DEFAULT_RACE_START_TIME = '19:00';
 const BackgroundGeolocation = registerPlugin<BackgroundGeolocationPlugin>('BackgroundGeolocation');
 
 interface GpsPosition {
@@ -44,6 +45,7 @@ export class GpsRecorderService {
   private latestPosition?: GpsPosition;
   private isSaving = false;
   private lastSavedAt = 0;
+  private raceStartTime = DEFAULT_RACE_START_TIME;
 
   readonly isRecording = signal(false);
   readonly status = signal('GPS no iniciado.');
@@ -53,7 +55,8 @@ export class GpsRecorderService {
     this.db = getFirestore(app);
   }
 
-  start(): void {
+  start(raceStartTime = DEFAULT_RACE_START_TIME): void {
+    this.raceStartTime = raceStartTime;
     void this.startRecording();
   }
 
@@ -246,6 +249,7 @@ export class GpsRecorderService {
       heading: position.heading,
       speed: position.speed,
       capturedAtMs: position.timestamp,
+      raceStartTime: this.raceStartTime,
       savedAt: serverTimestamp(),
     };
 

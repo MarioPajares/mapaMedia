@@ -14,7 +14,46 @@ interface SharedLocation {
   displayName?: string;
   latitude: number;
   longitude: number;
+  raceStartTime?: string;
 }
+
+interface RoutePoint {
+  point: L.LatLngTuple;
+}
+
+interface DistanceMarker {
+  kilometer: number;
+  point: L.LatLngTuple;
+  estimatedTime: string;
+}
+
+const DEFAULT_RACE_START_TIME = '19:00';
+const MARKER_INTERVAL_KM = 3;
+const HALF_MARATHON_KM = 21.0975;
+const EARTH_RADIUS_M = 6_371_000;
+const ESTIMATED_PACE_SECONDS_BY_KM = [
+  5 * 60 + 10,
+  4 * 60 + 54,
+  4 * 60 + 51,
+  4 * 60 + 53,
+  5 * 60 + 4,
+  4 * 60 + 49,
+  5 * 60 + 6,
+  4 * 60 + 50,
+  4 * 60 + 42,
+  4 * 60 + 51,
+  4 * 60 + 56,
+  5 * 60 + 3,
+  4 * 60 + 55,
+  4 * 60 + 57,
+  4 * 60 + 48,
+  5 * 60 + 5,
+  4 * 60 + 50,
+  5 * 60 + 6,
+  4 * 60 + 47,
+  4 * 60 + 41,
+  4 * 60 + 49,
+];
 
 @Component({
   selector: 'app-mapa',
@@ -30,6 +69,7 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
   protected readonly auth = inject(AuthService);
   protected readonly gpsRecorder = inject(GpsRecorderService);
   protected readonly isGpsWriter = computed(() => this.auth.isGpsWriter());
+  protected readonly selectedRaceStartTime = signal(DEFAULT_RACE_START_TIME);
   private readonly router = inject(Router);
   private readonly db: Firestore;
 
@@ -40,7 +80,9 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
   private startMarker?: L.CircleMarker;
   private locationWatchId?: number;
   private sharedLocationUnsubscribe?: Unsubscribe;
-  private hasCenteredOnUser = false;
+  private distanceMarkerLayers: L.Marker[] = [];
+  private raceStartTime = DEFAULT_RACE_START_TIME;
+  private routePoints: RoutePoint[] = [];
 
   constructor() {
     const app = getApps()[0] ?? initializeApp(environment.firebase);
@@ -66,15 +108,17 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
     }).addTo(this.map);
 
     const routePoints = await this.loadRoutePoints();
+    this.routePoints = routePoints;
+    const routeLatLngs = routePoints.map(({ point }) => point);
 
-    if (routePoints.length > 0) {
-      const route = L.polyline(routePoints, {
+    if (routeLatLngs.length > 0) {
+      const route = L.polyline(routeLatLngs, {
         color: '#1368ce',
         weight: 5,
         opacity: 0.9,
       }).addTo(this.map);
 
-      this.startMarker = L.circleMarker(routePoints[0], {
+      this.startMarker = L.circleMarker(routeLatLngs[0], {
         radius: 6,
         color: '#1b5e20',
         fillColor: '#2f9e44',
@@ -82,6 +126,7 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
         weight: 2,
       }).addTo(this.map);
 
+      this.updateDistanceMarkers();
       this.routeBounds = route.getBounds();
       this.map.fitBounds(this.routeBounds, { padding: [24, 24] });
       await this.startLocationFeatures();
@@ -115,8 +160,21 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
   }
 
   protected activateGps(): void {
+    this.raceStartTime = this.normalizeRaceStartTime(this.selectedRaceStartTime());
+    this.selectedRaceStartTime.set(this.raceStartTime);
+    this.updateDistanceMarkers();
     this.requestLocation();
-    this.gpsRecorder.start();
+    this.gpsRecorder.start(this.raceStartTime);
+  }
+
+  protected updateRaceStartTime(event: Event): void {
+    const value = event.target instanceof HTMLInputElement ? event.target.value : '';
+    this.raceStartTime = this.normalizeRaceStartTime(value);
+    this.selectedRaceStartTime.set(this.raceStartTime);
+
+    if (!this.gpsRecorder.isRecording()) {
+      this.updateDistanceMarkers();
+    }
   }
 
   protected loginAsEmitter(): void {
@@ -132,7 +190,6 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
     this.isLoading.set(false);
     this.userMarker?.remove();
     this.userMarker = undefined;
-    this.hasCenteredOnUser = false;
     await this.gpsRecorder.stopAndDeleteLatestLocation();
     this.status.set('GPS desactivado.');
   }
@@ -211,7 +268,7 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
     );
   }
 
-  private async loadRoutePoints(): Promise<L.LatLngTuple[]> {
+  private async loadRoutePoints(): Promise<RoutePoint[]> {
     try {
       const response = await fetch('/routes/media-maraton-caceres.gpx');
 
@@ -224,7 +281,7 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
       const trackPoints = Array.from(xml.querySelectorAll('trkpt'));
 
       return trackPoints
-        .map((point): L.LatLngTuple | null => {
+        .map((point): RoutePoint | null => {
           const lat = Number(point.getAttribute('lat'));
           const lon = Number(point.getAttribute('lon'));
 
@@ -232,12 +289,162 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
             return null;
           }
 
-          return [lat, lon];
+          return {
+            point: [lat, lon],
+          };
         })
-        .filter((point): point is L.LatLngTuple => point !== null);
+        .filter((point): point is RoutePoint => point !== null);
     } catch {
       return [];
     }
+  }
+
+  private updateDistanceMarkers(): void {
+    for (const marker of this.distanceMarkerLayers) {
+      marker.remove();
+    }
+
+    this.distanceMarkerLayers = [];
+
+    for (const marker of this.getDistanceMarkers(this.routePoints)) {
+      const markerLayer = L.marker(marker.point, {
+        icon: L.divIcon({
+          className: 'distance-marker',
+          html: `<span>${marker.kilometer}</span>`,
+          iconSize: [30, 30],
+          iconAnchor: [15, 15],
+        }),
+      }).bindTooltip(`Km ${marker.kilometer} · ${marker.estimatedTime}`, {
+          direction: 'top',
+          offset: [0, -12],
+          opacity: 0.95,
+        });
+
+      markerLayer.addTo(this.map!);
+      this.distanceMarkerLayers.push(markerLayer);
+    }
+  }
+
+  private getDistanceMarkers(routePoints: RoutePoint[]): DistanceMarker[] {
+    if (routePoints.length < 2) {
+      return [];
+    }
+
+    const routeDistanceM = this.getRouteDistanceM(routePoints);
+    const targetDistanceM = Math.max(routeDistanceM, HALF_MARATHON_KM * 1000);
+    const markerCount = Math.floor(targetDistanceM / (MARKER_INTERVAL_KM * 1000));
+    const markers: DistanceMarker[] = [];
+
+    for (let markerIndex = 1; markerIndex <= markerCount; markerIndex += 1) {
+      const kilometer = markerIndex * MARKER_INTERVAL_KM;
+      const distanceIntoRouteM = ((kilometer * 1000) % routeDistanceM) || routeDistanceM;
+      const point = this.getPointAtDistance(routePoints, distanceIntoRouteM);
+
+      if (!point) {
+        continue;
+      }
+
+      markers.push({
+        kilometer,
+        point,
+        estimatedTime: this.getEstimatedArrivalTime(kilometer),
+      });
+    }
+
+    return markers;
+  }
+
+  private getRouteDistanceM(routePoints: RoutePoint[]): number {
+    let distance = 0;
+
+    for (let index = 1; index < routePoints.length; index += 1) {
+      distance += this.getDistanceBetweenPointsM(routePoints[index - 1].point, routePoints[index].point);
+    }
+
+    return distance;
+  }
+
+  private getPointAtDistance(routePoints: RoutePoint[], targetDistanceM: number): L.LatLngTuple | null {
+    let walkedDistanceM = 0;
+
+    for (let index = 1; index < routePoints.length; index += 1) {
+      const previousPoint = routePoints[index - 1].point;
+      const nextPoint = routePoints[index].point;
+      const segmentDistanceM = this.getDistanceBetweenPointsM(previousPoint, nextPoint);
+      const nextWalkedDistanceM = walkedDistanceM + segmentDistanceM;
+
+      if (nextWalkedDistanceM >= targetDistanceM) {
+        const ratio = segmentDistanceM === 0 ? 0 : (targetDistanceM - walkedDistanceM) / segmentDistanceM;
+
+        return [
+          previousPoint[0] + (nextPoint[0] - previousPoint[0]) * ratio,
+          previousPoint[1] + (nextPoint[1] - previousPoint[1]) * ratio,
+        ];
+      }
+
+      walkedDistanceM = nextWalkedDistanceM;
+    }
+
+    return routePoints[routePoints.length - 1].point;
+  }
+
+  private getDistanceBetweenPointsM(firstPoint: L.LatLngTuple, secondPoint: L.LatLngTuple): number {
+    const firstLat = this.toRadians(firstPoint[0]);
+    const secondLat = this.toRadians(secondPoint[0]);
+    const latDelta = this.toRadians(secondPoint[0] - firstPoint[0]);
+    const lonDelta = this.toRadians(secondPoint[1] - firstPoint[1]);
+    const haversine =
+      Math.sin(latDelta / 2) ** 2 +
+      Math.cos(firstLat) * Math.cos(secondLat) * Math.sin(lonDelta / 2) ** 2;
+
+    return 2 * EARTH_RADIUS_M * Math.atan2(Math.sqrt(haversine), Math.sqrt(1 - haversine));
+  }
+
+  private getEstimatedArrivalTime(kilometer: number): string {
+    const estimatedArrival = new Date();
+    const [startHour, startMinute] = this.getRaceStartTimeParts(this.raceStartTime);
+    estimatedArrival.setHours(startHour, startMinute, 0, 0);
+    estimatedArrival.setSeconds(estimatedArrival.getSeconds() + this.getEstimatedElapsedSeconds(kilometer));
+
+    return estimatedArrival.toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  }
+
+  private getEstimatedElapsedSeconds(kilometer: number): number {
+    const elapsedSeconds = ESTIMATED_PACE_SECONDS_BY_KM
+      .slice(0, kilometer)
+      .reduce((total, paceSeconds) => total + paceSeconds, 0);
+
+    return Math.round(elapsedSeconds / 60) * 60;
+  }
+
+  private normalizeRaceStartTime(value: string): string {
+    const [hours, minutes] = this.getRaceStartTimeParts(value);
+
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+  }
+
+  private getRaceStartTimeParts(value: string): [number, number] {
+    const match = /^(\d{1,2}):(\d{2})$/.exec(value);
+
+    if (!match) {
+      return [19, 0];
+    }
+
+    const hours = Number(match[1]);
+    const minutes = Number(match[2]);
+
+    if (Number.isNaN(hours) || Number.isNaN(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+      return [19, 0];
+    }
+
+    return [hours, minutes];
+  }
+
+  private toRadians(value: number): number {
+    return (value * Math.PI) / 180;
   }
 
   private showLocation(position: GeolocationPosition): void {
@@ -248,31 +455,25 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
 
     this.userMarker = this.createLocationMarker(currentPoint).addTo(this.map!);
 
-    if (!this.hasCenteredOnUser) {
-      const focusBounds = this.routeBounds
-        ? L.latLngBounds(this.routeBounds.getSouthWest(), this.routeBounds.getNorthEast()).extend(currentPoint)
-        : L.latLngBounds([currentPoint]);
-
-      this.map?.fitBounds(focusBounds, { padding: [24, 24] });
-      this.hasCenteredOnUser = true;
-    } else {
-      this.map?.panTo(currentPoint, { animate: true });
-    }
-
     this.status.set(`Ubicacion GPS detectada. Precision ${Math.round(accuracy)} m.`);
   }
 
   private showSharedLocation(location: SharedLocation): void {
+    if (location.raceStartTime) {
+      const raceStartTime = this.normalizeRaceStartTime(location.raceStartTime);
+
+      if (raceStartTime !== this.raceStartTime) {
+        this.raceStartTime = raceStartTime;
+        this.selectedRaceStartTime.set(raceStartTime);
+        this.updateDistanceMarkers();
+      }
+    }
+
     const currentPoint: L.LatLngTuple = [location.latitude, location.longitude];
 
     this.sharedMarker?.remove();
 
     this.sharedMarker = this.createLocationMarker(currentPoint).addTo(this.map!);
-
-    if (!this.hasCenteredOnUser) {
-      this.map?.setView(currentPoint, 16);
-      this.hasCenteredOnUser = true;
-    }
 
     const capturedAt = location.capturedAtMs ? new Date(location.capturedAtMs).toLocaleTimeString() : '';
     const suffix = capturedAt ? ` Actualizada a las ${capturedAt}.` : '';
@@ -282,7 +483,6 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
   private clearSharedLocation(): void {
     this.sharedMarker?.remove();
     this.sharedMarker = undefined;
-    this.hasCenteredOnUser = false;
   }
 
   private createLocationMarker(point: L.LatLngTuple): L.Marker {
