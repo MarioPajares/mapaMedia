@@ -160,6 +160,8 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
   private startMarker?: L.CircleMarker;
   private locationWatchId?: number;
   private sharedLocationUnsubscribe?: Unsubscribe;
+  private savedRacesUnsubscribe?: Unsubscribe;
+  private activeRaceUnsubscribe?: Unsubscribe;
   private distanceMarkerLayers: L.Marker[] = [];
   private routeLayer?: L.Polyline;
   private raceStartTime = DEFAULT_RACE_START_TIME;
@@ -213,6 +215,7 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
       maxZoom: 19,
     }).addTo(this.map);
 
+    this.startRaceConfigListeners();
     const routePoints = await this.loadRoutePoints();
     this.renderRoute(routePoints);
 
@@ -231,6 +234,7 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
     }
 
     this.stopSharedLocationListener();
+    this.stopRaceConfigListeners();
     this.gpsRecorder.stop();
     this.map?.remove();
   }
@@ -504,6 +508,58 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
     }
   }
 
+  private startRaceConfigListeners(): void {
+    this.stopRaceConfigListeners();
+
+    this.savedRacesUnsubscribe = onSnapshot(
+      collection(this.db, 'races'),
+      (snapshot) => {
+        const races = this.parseSavedRacesSnapshot(snapshot.docs.map((raceDoc) => ({ id: raceDoc.id, data: raceDoc.data() })));
+        this.savedRaces.set(races);
+        this.renderActiveRaceFromSavedRaces();
+      },
+      (error) => {
+        this.raceConfigStatus.set('No se pudieron actualizar las carreras.');
+        console.warn('Races realtime read error', error);
+      }
+    );
+
+    this.activeRaceUnsubscribe = onSnapshot(
+      doc(this.db, 'activeRace', 'current'),
+      (snapshot) => {
+        const activeRaceId = snapshot.exists() ? snapshot.data()['raceId'] : '';
+
+        if (typeof activeRaceId !== 'string' || !activeRaceId) {
+          this.activeRaceId.set('');
+          this.selectedRaceId.set('');
+          this.clearRoute();
+          this.raceName.set('Actualmente no hay carreras activas');
+          return;
+        }
+
+        this.activeRaceId.set(activeRaceId);
+        this.selectedRaceId.set(activeRaceId);
+        this.renderActiveRaceFromSavedRaces();
+      },
+      (error) => {
+        this.raceConfigStatus.set('No se pudo actualizar la carrera activa.');
+        console.warn('Active race realtime read error', error);
+      }
+    );
+  }
+
+  private stopRaceConfigListeners(): void {
+    if (this.savedRacesUnsubscribe) {
+      this.savedRacesUnsubscribe();
+      this.savedRacesUnsubscribe = undefined;
+    }
+
+    if (this.activeRaceUnsubscribe) {
+      this.activeRaceUnsubscribe();
+      this.activeRaceUnsubscribe = undefined;
+    }
+  }
+
   protected requestLocation(): void {
     if (!window.isSecureContext) {
       this.status.set('La ubicacion necesita HTTPS. Abre la app desde Netlify o localhost.');
@@ -569,12 +625,31 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
 
   private async loadSavedRaces(): Promise<void> {
     const snapshot = await getDocs(collection(this.db, 'races'));
-    const races = snapshot.docs
-      .map((raceDoc): SavedRace => ({ id: raceDoc.id, ...(raceDoc.data() as RaceConfig) }))
+    this.savedRaces.set(this.parseSavedRacesSnapshot(snapshot.docs.map((raceDoc) => ({ id: raceDoc.id, data: raceDoc.data() }))));
+  }
+
+  private parseSavedRacesSnapshot(raceDocs: Array<{ id: string; data: unknown }>): SavedRace[] {
+    return raceDocs
+      .map((raceDoc): SavedRace => ({ id: raceDoc.id, ...(raceDoc.data as RaceConfig) }))
       .filter((race) => typeof race.name === 'string' && typeof race.gpxText === 'string')
       .sort((first, second) => (first.name ?? '').localeCompare(second.name ?? ''));
+  }
 
-    this.savedRaces.set(races);
+  private renderActiveRaceFromSavedRaces(): void {
+    const activeRaceId = this.activeRaceId();
+
+    if (!activeRaceId) {
+      return;
+    }
+
+    const activeRace = this.savedRaces().find((race) => race.id === activeRaceId);
+
+    if (!activeRace?.gpxText) {
+      return;
+    }
+
+    this.applyRaceConfig(activeRace);
+    this.renderRoute(this.parseGpxRoutePoints(activeRace.gpxText, activeRace.name));
   }
 
   private resetRaceForm(): void {
