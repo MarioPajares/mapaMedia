@@ -67,6 +67,9 @@ const ELEVATION_CHART_WIDTH = 320;
 const ELEVATION_CHART_HEIGHT = 90;
 const ELEVATION_CHART_PADDING = 10;
 const ELEVATION_GAIN_THRESHOLD_M = 2.25;
+const INITIAL_MAP_ZOOM = 14;
+const INITIAL_ROUTE_ZOOM_BOOST = 1;
+const MAX_INITIAL_ROUTE_ZOOM = 15;
 const ESTIMATED_PACE_SECONDS_BY_KM = [
   5 * 60 + 10,
   4 * 60 + 54,
@@ -206,11 +209,11 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
 
     this.map = L.map(container, {
       center: [39.4762, -6.3722],
-      zoom: 13,
+      zoom: INITIAL_MAP_ZOOM,
       zoomControl: true,
     });
 
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png', {
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
       attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
       maxZoom: 19,
     }).addTo(this.map);
@@ -224,7 +227,7 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
       return;
     }
 
-    this.map.setView([39.4762, -6.3722], 13);
+    this.map.setView([39.4762, -6.3722], INITIAL_MAP_ZOOM);
     await this.startLocationFeatures();
   }
 
@@ -745,6 +748,7 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
     this.updateDistanceMarkers();
     this.routeBounds = this.routeLayer.getBounds();
     this.map.fitBounds(this.routeBounds, { padding: [24, 24] });
+    this.map.setZoom(Math.min(this.map.getZoom() + INITIAL_ROUTE_ZOOM_BOOST, MAX_INITIAL_ROUTE_ZOOM));
   }
 
   private clearRoute(): void {
@@ -1057,6 +1061,7 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
     this.userMarker?.remove();
 
     this.userMarker = this.createLocationMarker(currentPoint).addTo(this.map!);
+    this.followCurrentLocation(currentPoint);
 
     this.status.set(`Ubicacion GPS detectada. Precision ${Math.round(accuracy)} m.`);
   }
@@ -1077,6 +1082,7 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
     this.sharedMarker?.remove();
 
     this.sharedMarker = this.createLocationMarker(currentPoint).addTo(this.map!);
+    this.followCurrentLocation(currentPoint);
 
     const capturedAt = location.capturedAtMs ? new Date(location.capturedAtMs).toLocaleTimeString() : '';
     const suffix = capturedAt ? ` Actualizada a las ${capturedAt}.` : '';
@@ -1086,6 +1092,17 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
   private clearSharedLocation(): void {
     this.sharedMarker?.remove();
     this.sharedMarker = undefined;
+  }
+
+  private followCurrentLocation(point: L.LatLngTuple): void {
+    if (!this.map) {
+      return;
+    }
+
+    this.map.panTo(point, {
+      animate: true,
+      duration: 0.5,
+    });
   }
 
   private createLocationMarker(point: L.LatLngTuple): L.Marker {
