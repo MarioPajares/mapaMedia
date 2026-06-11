@@ -45,6 +45,45 @@ Para usar la version recomendada de Node:
 nvm use
 ```
 
+## Pasos para que funcione
+
+Para que la aplicacion funcione completa en otra cuenta o equipo, no basta con instalar dependencias: cada persona tiene que conectar su propio backend y su propia web publicada.
+
+1. Clona el repositorio e instala dependencias:
+
+```bash
+nvm use
+npm install
+```
+
+2. Crea los archivos locales desde las plantillas:
+
+```bash
+cp src/environments/environment.example.ts src/environments/environment.ts
+cp android/app/google-services.example.json android/app/google-services.json
+cp firebase.example.json firebase.json
+cp firestore.rules.example firestore.rules
+cp netlify.toml.example netlify.toml
+```
+
+3. Crea un proyecto propio en Firebase.
+
+4. Activa Authentication con Google y Cloud Firestore.
+
+5. Crea una app web en Firebase y copia sus variables en `src/environments/environment.ts`.
+
+6. Si vas a usar Android, elige un identificador de aplicacion propio, por ejemplo `com.tuempresa.tuapp`. Usa ese mismo identificador en Firebase, en `capacitor.config.ts`, en `android/app/build.gradle` y en el archivo `android/app/google-services.json`.
+
+7. Despliega o revisa las reglas de Firestore desde `firestore.rules`.
+
+8. Publica la web en Netlify u otro hosting. Si usas Netlify, parte de `netlify.toml.example`.
+
+9. Anade el dominio publicado a los dominios autorizados de Firebase Authentication. Para desarrollo local, `localhost` tambien debe estar autorizado.
+
+10. Comprueba el flujo completo: iniciar sesion, activar GPS desde el movil y abrir la web publicada para ver la ubicacion compartida.
+
+Sin Firebase configurado, la app puede mostrar el mapa, pero no podra iniciar sesion, guardar carreras ni compartir ubicacion. Sin una web publicada, otros usuarios no tendran una pagina estable desde la que ver la ubicacion compartida.
+
 ## Configuracion local
 
 Este repositorio no incluye credenciales, secretos ni configuraciones personales de despliegue.
@@ -80,7 +119,7 @@ Para configurarlo en un proyecto nuevo:
 3. Activa Cloud Firestore.
 4. Crea una app web y copia sus datos en `src/environments/environment.ts`.
 5. Autoriza los dominios desde Authentication: al menos `localhost` para desarrollo y el dominio real si despliegas la web.
-6. Si vas a usar Android, crea una app Android con el package name `com.mapamedia.app`, descarga `google-services.json` y guardalo en `android/app/google-services.json`.
+6. Si vas a usar Android, crea una app Android con tu propio package name, descarga `google-services.json` y guardalo en `android/app/google-services.json`. Ese package name debe coincidir con el `appId` de `capacitor.config.ts` y con la configuracion Android de Gradle.
 7. Copia `firestore.rules.example` a `firestore.rules` y revisa las reglas antes de desplegarlas.
 
 El archivo `src/environments/environment.ts` debe quedar con este formato:
