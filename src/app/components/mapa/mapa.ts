@@ -136,7 +136,7 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
   protected readonly canShareRaces = computed(() => this.auth.canShareRaces());
   protected readonly isNativeApp = Capacitor.isNativePlatform();
   protected readonly selectedRaceStartTime = signal(DEFAULT_RACE_START_TIME);
-  protected readonly raceName = signal('Media Maraton Caceres Patrimonio de la Humanidad 2026');
+  protected readonly raceName = signal('Actualmente no hay carreras activas');
   protected readonly raceFormName = signal('');
   protected readonly raceFormLaps = signal(DEFAULT_RACE_LAPS);
   protected readonly raceFormMarkerIntervalKm = signal(DEFAULT_MARKER_INTERVAL_KM);

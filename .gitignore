@@ -49,6 +49,7 @@ android/app/google-services.local.json
 netlify.env
 netlify.toml
 .netlify/
+public/routes/*.gpx
 
 # System files
 .DS_Store

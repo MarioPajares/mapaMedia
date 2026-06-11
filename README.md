@@ -12,6 +12,8 @@ Los usuarios pueden iniciar sesion con Google mediante un proveedor de autentica
 
 En navegador, la ubicacion se obtiene con la API `navigator.geolocation`. En Android, la app usa Capacitor y el plugin de geolocalizacion en segundo plano para poder seguir compartiendo ubicacion aunque el movil este bloqueado. Tambien solicita permisos de notificaciones locales para mantener el servicio activo correctamente.
 
+El repositorio no incluye una carrera GPX por defecto. Cada instalacion debe subir su propio archivo `.gpx` desde la gestion de carreras para crear y activar el recorrido que quiera mostrar.
+
 La ruta `/ubicacion` permite probar la deteccion de ubicacion del dispositivo y mostrarla sobre un mapa con un circulo de precision.
 
 ## Tecnologias usadas
@@ -72,7 +74,7 @@ cp netlify.toml.example netlify.toml
 
 5. Crea una app web en Firebase y copia sus variables en `src/environments/environment.ts`.
 
-6. Si vas a usar Android, elige un identificador de aplicacion propio, por ejemplo `com.tuempresa.tuapp`. Usa ese mismo identificador en Firebase, en `capacitor.config.ts`, en `android/app/build.gradle` y en el archivo `android/app/google-services.json`.
+6. Si vas a usar Android, elige un identificador de aplicacion propio, por ejemplo `com.nombre.app`. Usa ese mismo identificador en Firebase, en `capacitor.config.ts`, en `android/app/build.gradle` y en el archivo `android/app/google-services.json`.
 
 7. Despliega o revisa las reglas de Firestore desde `firestore.rules`.
 
