@@ -6,20 +6,19 @@ import type {
 } from '@capacitor-community/background-geolocation';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { Capacitor, registerPlugin } from '@capacitor/core';
-import { FirebaseError, initializeApp, getApps } from 'firebase/app';
+import { FirebaseError } from 'firebase/app';
 import {
   addDoc,
   collection,
   deleteDoc,
   doc,
-  getFirestore,
   serverTimestamp,
   setDoc,
   type Firestore,
 } from 'firebase/firestore';
 
-import { environment } from '../../environments/environment';
 import { AuthService } from './auth.service';
+import { getConfiguredFirestore } from './backend-config';
 
 const SAVE_INTERVAL_MS = 15_000;
 const DEFAULT_RACE_START_TIME = '19:00';
@@ -38,7 +37,7 @@ interface GpsPosition {
 @Injectable({ providedIn: 'root' })
 export class GpsRecorderService {
   private readonly auth = inject(AuthService);
-  private readonly db: Firestore;
+  private readonly db?: Firestore;
   private intervalId?: number;
   private watchId?: number;
   private backgroundWatchId?: string;
@@ -51,8 +50,7 @@ export class GpsRecorderService {
   readonly status = signal('GPS no iniciado.');
 
   constructor() {
-    const app = getApps()[0] ?? initializeApp(environment.firebase);
-    this.db = getFirestore(app);
+    this.db = getConfiguredFirestore();
   }
 
   start(raceStartTime = DEFAULT_RACE_START_TIME): void {
@@ -66,6 +64,11 @@ export class GpsRecorderService {
     await this.auth.ready;
     const user = this.auth.user();
 
+    if (!this.db) {
+      this.status.set('Configura las variables del backend para borrar el GPS.');
+      return;
+    }
+
     if (!user) {
       this.status.set('Este usuario no tiene permiso para borrar el GPS.');
       return;
@@ -76,7 +79,7 @@ export class GpsRecorderService {
       this.status.set('GPS desactivado y ultima ubicacion eliminada.');
     } catch (error) {
       this.status.set(this.getFirestoreDeleteErrorMessage(error));
-      console.error('Firestore GPS delete error', error);
+      console.error('GPS delete error', error);
     }
   }
 
@@ -91,6 +94,11 @@ export class GpsRecorderService {
 
     if (!user) {
       this.status.set('Inicia sesion para guardar el GPS.');
+      return;
+    }
+
+    if (!this.db) {
+      this.status.set('Configura las variables del backend para guardar el GPS.');
       return;
     }
 
@@ -226,6 +234,12 @@ export class GpsRecorderService {
       return;
     }
 
+    if (!this.db) {
+      this.status.set('Configura las variables del backend para guardar el GPS.');
+      this.stop();
+      return;
+    }
+
     if (!this.latestPosition) {
       this.status.set('Esperando una posicion valida para guardar.');
       return;
@@ -255,7 +269,7 @@ export class GpsRecorderService {
       this.status.set(`GPS guardado: ${new Date().toLocaleTimeString()}`);
     } catch (error) {
       this.status.set(this.getFirestoreErrorMessage(error));
-      console.error('Firestore GPS save error', error);
+      console.error('GPS save error', error);
     } finally {
       this.isSaving = false;
     }
@@ -325,28 +339,28 @@ export class GpsRecorderService {
   private getFirestoreErrorMessage(error: unknown): string {
     if (error instanceof FirebaseError) {
       if (error.code === 'permission-denied') {
-        return 'Firestore rechazo el guardado: revisa las reglas y la sesion del usuario.';
+        return 'El backend rechazo el guardado: revisa las reglas y la sesion del usuario.';
       }
 
       if (error.code === 'unavailable') {
-        return 'Firestore no esta disponible ahora mismo.';
+        return 'El backend no esta disponible ahora mismo.';
       }
 
-      return `Error de Firestore: ${error.code}`;
+      return `Error del backend: ${error.code}`;
     }
 
-    return 'No se pudo guardar la posicion GPS en Firestore.';
+    return 'No se pudo guardar la posicion GPS en el backend.';
   }
 
   private getFirestoreDeleteErrorMessage(error: unknown): string {
     if (error instanceof FirebaseError) {
       if (error.code === 'permission-denied') {
-        return 'Firestore rechazo el borrado: revisa las reglas y la sesion del usuario.';
+        return 'El backend rechazo el borrado: revisa las reglas y la sesion del usuario.';
       }
 
-      return `Error de Firestore al borrar: ${error.code}`;
+      return `Error del backend al borrar: ${error.code}`;
     }
 
-    return 'No se pudo borrar la ultima ubicacion en Firestore.';
+    return 'No se pudo borrar la ultima ubicacion en el backend.';
   }
 }

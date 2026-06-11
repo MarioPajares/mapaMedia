@@ -48,11 +48,11 @@ export class LoginComponent {
       }
 
       if (code.includes('unauthorized-domain')) {
-        return 'Este dominio no esta autorizado en Firebase Authentication.';
+        return 'Este dominio no esta autorizado en el proveedor de autenticacion.';
       }
 
       if (code.includes('invalid-credential') || code.includes('credential-already-in-use')) {
-        return `Google rechazo la credencial (${code}). Revisa la configuracion de Android en Firebase.`;
+        return `Google rechazo la credencial (${code}). Revisa la configuracion de Android del proveedor.`;
       }
 
       return `No se pudo iniciar sesion con Google (${code}).`;

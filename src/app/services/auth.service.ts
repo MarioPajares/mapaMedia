@@ -1,7 +1,7 @@
 import { Injectable, computed, signal } from '@angular/core';
 import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
 import { Capacitor } from '@capacitor/core';
-import { initializeApp, type FirebaseApp } from 'firebase/app';
+import type { FirebaseApp } from 'firebase/app';
 import {
   GoogleAuthProvider,
   browserLocalPersistence,
@@ -15,20 +15,11 @@ import {
   type User,
 } from 'firebase/auth';
 
-import { environment } from '../../environments/environment';
-
-function hasFirebaseConfig(): boolean {
-  return Boolean(
-    environment.firebase.apiKey &&
-      environment.firebase.authDomain &&
-      environment.firebase.projectId &&
-      environment.firebase.appId
-  );
-}
+import { getConfiguredBackendApp, hasBackendConfig } from './backend-config';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private readonly configured = hasFirebaseConfig();
+  private readonly configured = hasBackendConfig();
   private readonly app?: FirebaseApp;
   private readonly auth?: Auth;
   private readonly provider = new GoogleAuthProvider();
@@ -49,7 +40,12 @@ export class AuthService {
       return;
     }
 
-    this.app = initializeApp(environment.firebase);
+    this.app = getConfiguredBackendApp();
+    if (!this.app) {
+      this.resolveReady();
+      return;
+    }
+
     this.auth = getAuth(this.app);
     this.provider.setCustomParameters({ prompt: 'select_account' });
     void setPersistence(this.auth, browserLocalPersistence);
@@ -67,8 +63,8 @@ export class AuthService {
 
   private async signInWithGoogle(): Promise<User> {
     if (!this.auth) {
-      window.alert('Configura Firebase en src/environments/environment.ts para activar Google Login.');
-      throw new Error('Firebase auth is not configured.');
+      window.alert('Configura las variables del backend en src/environments/environment.ts para activar Google Login.');
+      throw new Error('Backend auth is not configured.');
     }
 
     if (Capacitor.isNativePlatform()) {

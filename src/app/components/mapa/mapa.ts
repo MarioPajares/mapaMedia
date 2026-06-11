@@ -1,7 +1,7 @@
 import { AfterViewInit, Component, ElementRef, OnDestroy, ViewChild, computed, inject, signal } from '@angular/core';
 import { Capacitor } from '@capacitor/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { FirebaseError, getApps, initializeApp } from 'firebase/app';
+import { FirebaseError } from 'firebase/app';
 import {
   addDoc,
   collection,
@@ -9,7 +9,6 @@ import {
   doc,
   getDoc,
   getDocs,
-  getFirestore,
   onSnapshot,
   serverTimestamp,
   setDoc,
@@ -19,8 +18,8 @@ import {
 } from 'firebase/firestore';
 import * as L from 'leaflet';
 
-import { environment } from '../../../environments/environment';
 import { AuthService } from '../../services/auth.service';
+import { getConfiguredFirestore } from '../../services/backend-config';
 import { GpsRecorderService } from '../../services/gps-recorder.service';
 
 interface SharedLocation {
@@ -158,7 +157,7 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
   protected readonly hasElevationProfile = computed(() => this.elevationPath() !== '');
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
-  private readonly db: Firestore;
+  private readonly db?: Firestore;
 
   private mapContainer?: ElementRef<HTMLDivElement>;
   private map?: L.Map;
@@ -183,8 +182,7 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
   private lastLocationShownAt = 0;
 
   constructor() {
-    const app = getApps()[0] ?? initializeApp(environment.firebase);
-    this.db = getFirestore(app);
+    this.db = getConfiguredFirestore();
     this.route.queryParamMap.subscribe((params) => {
       const panel = params.get('panel');
       const nextPanel = panel === 'existing' || panel === 'add' ? panel : '';
@@ -304,12 +302,18 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
   }
 
   protected async updateSavedRaceMarkerInterval(raceId: string, event: Event): Promise<void> {
+    const db = this.getDbOrShowRaceConfigStatus();
+
+    if (!db) {
+      return;
+    }
+
     const markerIntervalKm = this.normalizeMarkerInterval(
       event.target instanceof HTMLInputElement ? Number(event.target.value) : DEFAULT_MARKER_INTERVAL_KM
     );
     const races = this.savedRaces().map((race) => (race.id === raceId ? { ...race, markerIntervalKm } : race));
     this.savedRaces.set(races);
-    await updateDoc(doc(this.db, 'races', raceId), {
+    await updateDoc(doc(db, 'races', raceId), {
       markerIntervalKm,
       updatedAt: serverTimestamp(),
       updatedBy: this.auth.user()?.uid ?? null,
@@ -352,6 +356,12 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
   }
 
   protected async saveRaceConfig(): Promise<void> {
+    const db = this.getDbOrShowRaceConfigStatus();
+
+    if (!db) {
+      return;
+    }
+
     const name = this.raceFormName().trim();
     const laps = this.normalizeRaceLaps(this.raceFormLaps());
     const markerIntervalKm = this.normalizeMarkerInterval(this.raceFormMarkerIntervalKm());
@@ -376,7 +386,7 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
     this.isSavingRaceConfig.set(true);
 
     try {
-      const raceDoc = await addDoc(collection(this.db, 'races'), {
+      const raceDoc = await addDoc(collection(db, 'races'), {
         gpxText: this.selectedGpxText,
         laps,
         markerIntervalKm,
@@ -410,6 +420,12 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
   }
 
   protected async activateRace(raceId: string): Promise<void> {
+    const db = this.getDbOrShowRaceConfigStatus();
+
+    if (!db) {
+      return;
+    }
+
     const race = this.savedRaces().find((savedRace) => savedRace.id === raceId);
 
     if (!race?.gpxText) {
@@ -417,7 +433,7 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
       return;
     }
 
-    await setDoc(doc(this.db, 'activeRace', 'current'), {
+    await setDoc(doc(db, 'activeRace', 'current'), {
       raceId,
       updatedAt: serverTimestamp(),
       updatedBy: this.auth.user()?.uid ?? null,
@@ -431,11 +447,17 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
   }
 
   protected async deactivateRace(raceId: string): Promise<void> {
+    const db = this.getDbOrShowRaceConfigStatus();
+
+    if (!db) {
+      return;
+    }
+
     if (this.activeRaceId() !== raceId) {
       return;
     }
 
-    await deleteDoc(doc(this.db, 'activeRace', 'current'));
+    await deleteDoc(doc(db, 'activeRace', 'current'));
     this.activeRaceId.set('');
     this.selectedRaceId.set('');
     this.clearRoute();
@@ -444,16 +466,22 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
   }
 
   protected async deleteRace(raceId: string): Promise<void> {
+    const db = this.getDbOrShowRaceConfigStatus();
+
+    if (!db) {
+      return;
+    }
+
     const race = this.savedRaces().find((savedRace) => savedRace.id === raceId);
 
     if (!race || !window.confirm(`¿Eliminar "${race.name}"?`)) {
       return;
     }
 
-    await deleteDoc(doc(this.db, 'races', raceId));
+    await deleteDoc(doc(db, 'races', raceId));
 
     if (this.activeRaceId() === raceId) {
-      await deleteDoc(doc(this.db, 'activeRace', 'current'));
+      await deleteDoc(doc(db, 'activeRace', 'current'));
       this.activeRaceId.set('');
       this.selectedRaceId.set('');
       this.clearRoute();
@@ -491,9 +519,14 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
 
   private startSharedLocationListener(): void {
     this.stopSharedLocationListener();
+    const db = this.getDbOrShowStatus();
+
+    if (!db) {
+      return;
+    }
 
     this.sharedLocationUnsubscribe = onSnapshot(
-      collection(this.db, 'latestLocations'),
+      collection(db, 'latestLocations'),
       (snapshot) => {
         if (snapshot.empty) {
           this.clearSharedLocation();
@@ -529,9 +562,15 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
 
   private startRaceConfigListeners(): void {
     this.stopRaceConfigListeners();
+    const db = this.getDbOrShowRaceConfigStatus();
+
+    if (!db) {
+      this.raceName.set('Configura las variables del backend para cargar carreras.');
+      return;
+    }
 
     this.savedRacesUnsubscribe = onSnapshot(
-      collection(this.db, 'races'),
+      collection(db, 'races'),
       (snapshot) => {
         const races = this.parseSavedRacesSnapshot(snapshot.docs.map((raceDoc) => ({ id: raceDoc.id, data: raceDoc.data() })));
         this.savedRaces.set(races);
@@ -544,7 +583,7 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
     );
 
     this.activeRaceUnsubscribe = onSnapshot(
-      doc(this.db, 'activeRace', 'current'),
+      doc(db, 'activeRace', 'current'),
       (snapshot) => {
         const activeRaceId = snapshot.exists() ? snapshot.data()['raceId'] : '';
 
@@ -579,9 +618,27 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
     }
   }
 
+  private getDbOrShowStatus(): Firestore | undefined {
+    if (this.db) {
+      return this.db;
+    }
+
+    this.status.set('Configura las variables del backend para compartir ubicacion.');
+    return undefined;
+  }
+
+  private getDbOrShowRaceConfigStatus(): Firestore | undefined {
+    if (this.db) {
+      return this.db;
+    }
+
+    this.raceConfigStatus.set('Configura las variables del backend para guardar y cargar carreras.');
+    return undefined;
+  }
+
   protected requestLocation(): void {
     if (!window.isSecureContext) {
-      this.status.set('La ubicacion necesita HTTPS. Abre la app desde Netlify o localhost.');
+      this.status.set('La ubicacion necesita HTTPS o localhost.');
       return;
     }
 
@@ -618,9 +675,16 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
   }
 
   private async loadRoutePoints(): Promise<RoutePoint[]> {
+    const db = this.db;
+
+    if (!db) {
+      this.raceName.set('Configura las variables del backend para cargar carreras.');
+      return [];
+    }
+
     try {
       await this.loadSavedRaces();
-      const activeSnapshot = await getDoc(doc(this.db, 'activeRace', 'current'));
+      const activeSnapshot = await getDoc(doc(db, 'activeRace', 'current'));
       const activeRaceId = activeSnapshot.exists() ? activeSnapshot.data()['raceId'] : '';
 
       if (typeof activeRaceId === 'string' && activeRaceId) {
@@ -643,7 +707,14 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
   }
 
   private async loadSavedRaces(): Promise<void> {
-    const snapshot = await getDocs(collection(this.db, 'races'));
+    const db = this.db;
+
+    if (!db) {
+      this.savedRaces.set([]);
+      return;
+    }
+
+    const snapshot = await getDocs(collection(db, 'races'));
     this.savedRaces.set(this.parseSavedRacesSnapshot(snapshot.docs.map((raceDoc) => ({ id: raceDoc.id, data: raceDoc.data() }))));
   }
 
@@ -1220,7 +1291,7 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
 
   private getRaceConfigSaveErrorMessage(error: unknown): string {
     if (error instanceof FirebaseError && error.code === 'permission-denied') {
-      return 'Firestore rechazo el guardado de la carrera.';
+      return 'El backend rechazo el guardado de la carrera.';
     }
 
     return 'No se pudo guardar la carrera.';
