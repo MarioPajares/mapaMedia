@@ -1,0 +1,630 @@
+:host {
+  display: block;
+  min-height: 100dvh;
+  color: var(--text);
+  background:
+    linear-gradient(180deg, var(--app-bg) 0%, var(--app-bg-soft) 46%, #0f171c 100%);
+}
+
+.mapa-page {
+  min-height: 100dvh;
+  padding: 4.25rem 0 2rem;
+}
+
+.map-card {
+  width: min(1100px, 100%);
+  margin: 0 auto;
+}
+
+.route-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  width: min(1100px, 100%);
+  margin: 0 auto;
+}
+
+.map-controls {
+  position: sticky;
+  top: 0.75rem;
+  z-index: 500;
+  width: min(1120px, calc(100% - 2rem));
+  box-sizing: border-box;
+  margin: 0 auto 0.85rem;
+  border: 1px solid var(--border-soft);
+  border-radius: 22px;
+  padding: 0.8rem;
+  background: var(--surface-muted);
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(16px);
+}
+
+.map-controls .gps-actions {
+  width: auto;
+  margin: 0;
+}
+
+.gps-actions {
+  display: flex;
+  align-items: end;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  width: min(1100px, 80%);
+  margin: 0 auto 1rem;
+}
+
+.race-config-form {
+  display: grid;
+  grid-template-columns: minmax(18rem, 2fr) 6rem 7rem minmax(7rem, 1fr) auto;
+  gap: 0.65rem;
+  align-items: end;
+  margin-bottom: 0.7rem;
+}
+
+.config-field,
+.file-field {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.config-field input,
+.file-name {
+  min-height: 2.85rem;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  background: rgba(9, 16, 26, 0.72);
+}
+
+.config-field input {
+  width: 100%;
+  padding: 0 0.85rem;
+}
+
+.race-admin-panel {
+  display: grid;
+  gap: 0.7rem;
+  margin-bottom: 0.8rem;
+}
+
+.admin-back-link {
+  width: fit-content;
+  color: var(--accent);
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.race-admin-panel h2,
+.race-empty {
+  margin: 0;
+}
+
+.race-row,
+.activation-prompt {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 7rem auto auto auto;
+  gap: 0.55rem;
+  align-items: start;
+}
+
+.race-row > div {
+  padding-top: 0.1rem;
+}
+
+.race-row span,
+.activation-prompt span {
+  display: block;
+  color: var(--text-muted);
+}
+
+.inline-field {
+  display: grid;
+  gap: 0.25rem;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.inline-field input {
+  width: 100%;
+  min-height: 2.45rem;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  padding: 0 0.55rem;
+  color: var(--text);
+  background: rgba(9, 16, 26, 0.72);
+}
+
+.race-action {
+  border: 0;
+  border-radius: var(--radius-sm);
+  padding: 0.65rem 0.85rem;
+  color: var(--text);
+  background: var(--surface-strong);
+  font: inherit;
+  font-weight: 800;
+  margin-top: 1.28rem;
+}
+
+.race-action.activate {
+  color: #06231e;
+  background: var(--accent-2);
+}
+
+.race-action.deactivate {
+  color: #ffffff;
+  background: #e11d48;
+}
+
+.race-action.delete {
+  color: #fecdd3;
+  background: rgba(225, 29, 72, 0.16);
+}
+
+.race-action:disabled {
+  opacity: 0.45;
+}
+
+.file-field {
+  position: relative;
+  min-width: 0;
+  cursor: pointer;
+}
+
+.file-name {
+  display: grid;
+  align-items: center;
+  padding: 0 0.85rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-field input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.options-menu {
+  position: fixed;
+  top: max(0.85rem, env(safe-area-inset-top));
+  left: max(0.85rem, env(safe-area-inset-left));
+  z-index: 1000;
+  width: fit-content;
+  margin: 0;
+}
+
+.options-menu summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  border-radius: 999px;
+  padding: 0 0.9rem 0 1rem;
+  color: var(--text);
+  background: linear-gradient(135deg, var(--surface), #214d45);
+  box-shadow:
+    inset 0 0 0 1px var(--border-strong),
+    0 14px 34px rgba(5, 10, 18, 0.34);
+  cursor: pointer;
+  font-weight: 800;
+  list-style: none;
+  backdrop-filter: blur(14px);
+}
+
+.options-menu summary::after {
+  content: '';
+  width: 0.45rem;
+  height: 0.45rem;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg) translateY(-0.1rem);
+}
+
+.options-menu[open] summary::after {
+  transform: rotate(225deg) translateY(-0.1rem);
+}
+
+.options-menu summary::-webkit-details-marker {
+  display: none;
+}
+
+.options-panel {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: 0;
+  width: min(14rem, calc(100vw - 2rem));
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-md);
+  padding: 0.45rem;
+  background: rgba(27, 35, 48, 0.96);
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(14px);
+}
+
+.menu-option {
+  width: 100%;
+  border: 0;
+  border-radius: var(--radius-sm);
+  padding: 0.8rem 0.9rem;
+  color: var(--text);
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
+  text-align: left;
+}
+
+.menu-option:hover {
+  color: #ffffff;
+  background: rgba(103, 232, 249, 0.1);
+}
+
+.time-field {
+  flex: 1 1 10rem;
+  display: grid;
+  gap: 0.35rem;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.time-field input {
+  width: 100%;
+  min-height: 3rem;
+  box-sizing: border-box;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  padding: 0 1rem;
+  color: var(--text);
+  background: rgba(9, 16, 26, 0.72);
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.time-field input:disabled {
+  opacity: 0.7;
+}
+
+.emitter-view {
+  padding: 1rem 0 1.25rem;
+}
+
+.emitter-view .map-card {
+  width: min(1120px, calc(100% - 2rem));
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-lg);
+}
+
+.emitter-view .route-layout {
+  width: min(1120px, calc(100% - 2rem));
+}
+
+.emitter-view .route-layout .map-card {
+  width: 100%;
+}
+
+.emitter-view .elevation-card {
+  border-radius: 24px;
+}
+
+.emitter-view .map-frame {
+  height: min(78dvh, 780px);
+}
+
+.emitter-view .location-button {
+  border-radius: 14px;
+  min-height: 3rem;
+  padding: 0.8rem 1.25rem;
+}
+
+.race-title {
+  width: min(1100px, 100%);
+  margin: 0 auto 1rem;
+  color: var(--text);
+  font-size: 2rem;
+  line-height: 1.08;
+  letter-spacing: 0;
+  text-wrap: balance;
+}
+
+.location-button {
+  border: 0;
+  border-radius: 999px;
+  padding: 0.9rem 1.35rem;
+  font: inherit;
+  font-weight: 800;
+  color: #07221f;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  cursor: pointer;
+  box-shadow: 0 18px 34px rgba(20, 184, 166, 0.22);
+}
+
+.location-button:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.location-button.danger {
+  color: #ffffff;
+  background: linear-gradient(135deg, #9f1239, #e11d48);
+  box-shadow: 0 20px 35px rgba(225, 29, 72, 0.2);
+}
+
+.map-card {
+  overflow: hidden;
+  width: 100%;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-strong);
+  margin: 0 auto;
+}
+
+.route-layout .map-card {
+  min-width: 0;
+  margin: 0;
+}
+
+.elevation-card {
+  display: grid;
+  align-content: start;
+  gap: 0.35rem;
+  min-height: 0;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-lg);
+  padding: 0.85rem 0.9rem 0.7rem;
+  color: var(--text);
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
+}
+
+.elevation-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.elevation-header p,
+.elevation-header strong {
+  margin: 0;
+}
+
+.elevation-header p {
+  color: var(--text);
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.elevation-header strong {
+  color: var(--accent-2);
+  font-size: 1rem;
+}
+
+.elevation-chart {
+  width: 100%;
+  aspect-ratio: 320 / 90;
+  overflow: visible;
+}
+
+.elevation-area {
+  fill: rgba(20, 184, 166, 0.18);
+}
+
+.elevation-line {
+  fill: none;
+  stroke: var(--accent);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+  vector-effect: non-scaling-stroke;
+}
+
+.elevation-stats {
+  display: none;
+}
+
+.map-frame {
+  display: block;
+  width: 100%;
+  height: min(72dvh, 760px);
+  border: 0;
+}
+
+:host ::ng-deep .location-letter-marker {
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  color: #ffffff;
+  background: #e11d48;
+  box-shadow:
+    0 12px 26px rgba(5, 10, 18, 0.38);
+}
+
+:host ::ng-deep .location-letter-marker span {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+:host ::ng-deep .distance-marker {
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 999px;
+  color: #07221f;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow:
+    inset 0 -2px 0 rgba(7, 34, 31, 0.12),
+    0 8px 18px rgba(5, 10, 18, 0.28);
+}
+
+:host ::ng-deep .distance-marker span {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+:host ::ng-deep .finish-marker {
+  color: #ffffff;
+  background: #e11d48;
+}
+
+:host ::ng-deep .finish-marker span {
+  font-size: 0.65rem;
+}
+
+:host ::ng-deep .distance-marker::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  width: 7px;
+  height: 7px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 2px 2px 5px rgba(5, 10, 18, 0.18);
+  transform: translateX(-50%) rotate(45deg);
+  pointer-events: none;
+}
+
+:host ::ng-deep .finish-marker::after {
+  background: #e11d48;
+}
+
+@media (max-width: 720px) {
+  .mapa-page {
+    padding: 3.75rem 0 0.75rem;
+  }
+
+  .race-title {
+    width: calc(100% - 1rem);
+    font-size: 1.35rem;
+  }
+
+  :host ::ng-deep .leaflet-control-zoom {
+    display: none;
+  }
+
+  .map-controls {
+    top: 0.5rem;
+    width: calc(100% - 1rem);
+    margin-bottom: 0.55rem;
+    border-radius: 18px;
+    padding: 0.65rem;
+  }
+
+  .gps-actions {
+    width: 100%;
+  }
+
+  .race-config-form {
+    grid-template-columns: minmax(0, 1fr) 5.5rem;
+  }
+
+  .race-row,
+  .activation-prompt {
+    grid-template-columns: 1fr;
+  }
+
+  .race-config-form .file-field,
+  .race-config-form .location-button {
+    grid-column: 1 / -1;
+  }
+
+  .options-menu {
+    top: max(0.6rem, env(safe-area-inset-top));
+    left: max(0.6rem, env(safe-area-inset-left));
+    width: fit-content;
+  }
+
+  .options-menu summary {
+    min-height: 2.55rem;
+    padding-inline: 0.85rem 0.75rem;
+  }
+
+  .time-field {
+    min-width: 0;
+    font-size: 0.76rem;
+  }
+
+  .time-field input,
+  .location-button {
+    min-height: 2.8rem;
+  }
+
+  .location-button {
+    padding-inline: 1rem;
+    white-space: nowrap;
+  }
+
+  .map-controls .gps-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    width: 100%;
+    gap: 0.6rem;
+    margin: 0;
+  }
+
+  .map-card {
+    width: 100%;
+  }
+
+  .route-layout {
+    width: calc(100% - 1rem);
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .elevation-card {
+    width: 100%;
+    box-sizing: border-box;
+    border-radius: 20px;
+  }
+
+  .map-frame {
+    height: 70dvh;
+  }
+
+  .emitter-view {
+    padding: 0.65rem 0 0.75rem;
+  }
+
+  .emitter-view .gps-actions {
+    width: 100%;
+  }
+
+  .emitter-view .location-button {
+    border-radius: 13px;
+  }
+
+  .emitter-view .map-card {
+    width: calc(100% - 1rem);
+    border-radius: 20px;
+  }
+
+  .emitter-view .route-layout {
+    width: calc(100% - 1rem);
+  }
+
+  .emitter-view .route-layout .map-card {
+    width: 100%;
+  }
+
+  .emitter-view .elevation-card {
+    border-radius: 20px;
+  }
+
+  .emitter-view .map-frame {
+    height: calc(100dvh - 7.6rem);
+    min-height: 560px;
+  }
+}

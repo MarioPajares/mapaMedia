@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Mapa Media">
+  <defs>
+    <linearGradient id="sky" x1="92" y1="42" x2="420" y2="512" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00c4ff"/>
+      <stop offset="0.42" stop-color="#006cff"/>
+      <stop offset="1" stop-color="#001b9f"/>
+    </linearGradient>
+    <linearGradient id="route" x1="110" y1="438" x2="400" y2="258" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ff9400"/>
+      <stop offset="0.52" stop-color="#ffd900"/>
+      <stop offset="1" stop-color="#ffb300"/>
+    </linearGradient>
+    <linearGradient id="pin" x1="370" y1="112" x2="370" y2="306" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffbd00"/>
+      <stop offset="0.52" stop-color="#ff4a10"/>
+      <stop offset="1" stop-color="#df1300"/>
+    </linearGradient>
+    <radialGradient id="green" cx="50%" cy="42%" r="60%">
+      <stop offset="0" stop-color="#9cff00"/>
+      <stop offset="1" stop-color="#48b500"/>
+    </radialGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="150%" height="160%">
+      <feDropShadow dx="0" dy="12" stdDeviation="12" flood-color="#00125a" flood-opacity="0.38"/>
+    </filter>
+  </defs>
+
+  <rect width="512" height="512" fill="url(#sky)"/>
+
+  <g opacity="0.34" fill="none" stroke="#22a8ff" stroke-width="12" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M0 325c96-48 180-65 260-50 84 16 162 2 252-44"/>
+    <path d="M0 383c92-44 168-60 231-49 82 14 149 4 281-44"/>
+    <path d="M22 506c74-69 152-108 235-118 92-11 174-34 255-78"/>
+    <path d="M96 285l103 112 91 92"/>
+    <path d="M216 265l115 118 83 95"/>
+    <path d="M354 238l158 132"/>
+  </g>
+
+  <g transform="translate(128 128) scale(0.48)">
+    <path d="M95 438c72-20 122-27 165-18 40 8 74 2 95-21 33-36-9-77 30-109 24-20 57-18 94-7" fill="none" stroke="#b84600" stroke-width="54" stroke-linecap="round" stroke-linejoin="round" opacity="0.55"/>
+    <path d="M91 426c76-22 126-29 170-20 35 7 63 2 80-17 30-33-14-74 26-107 25-21 59-19 96-7" fill="none" stroke="url(#route)" stroke-width="42" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="91" cy="426" r="45" fill="#ffffff" filter="url(#shadow)"/>
+    <circle cx="91" cy="426" r="29" fill="url(#green)"/>
+
+    <g filter="url(#shadow)">
+      <circle cx="218" cy="118" r="33" fill="#ffffff"/>
+      <path d="M144 208l50-55c13-15 34-20 53-12l49 20c19 8 29 30 21 49l-13 31 34 31c11 10 12 28 2 39-11 11-28 12-40 2l-53-48c-10-9-13-24-7-37l9-21-42-16-37 41c-11 12-29 13-41 3-12-11-13-29-2-41z" fill="#ffffff"/>
+      <path d="M204 250l55 52c9 9 11 24 4 35l-52 80c-9 14-27 18-41 9-13-9-17-27-8-41l39-60-44-42c-12-11-12-30-1-42 11-12 30-12 42-1z" fill="#ffffff"/>
+      <path d="M159 258l-42 53-23 78c-5 16-21 25-37 20-15-5-24-21-20-37l25-88c2-5 4-10 8-14l46-58c10-13 29-15 41-5 13 10 15 29 2 51z" fill="#ffffff"/>
+      <path d="M42 188h82" stroke="#64f1ff" stroke-width="18" stroke-linecap="round"/>
+      <path d="M16 231h112" stroke="#64f1ff" stroke-width="18" stroke-linecap="round" opacity="0.92"/>
+      <path d="M45 274h74" stroke="#64f1ff" stroke-width="18" stroke-linecap="round" opacity="0.78"/>
+    </g>
+
+    <g filter="url(#shadow)">
+      <ellipse cx="371" cy="274" rx="59" ry="26" fill="none" stroke="#52eaff" stroke-width="18"/>
+      <path d="M371 99c-52 0-94 42-94 94 0 69 94 180 94 180s94-111 94-180c0-52-42-94-94-94z" fill="url(#pin)"/>
+      <circle cx="371" cy="193" r="37" fill="#ffffff"/>
+      <circle cx="371" cy="193" r="22" fill="#0459d9"/>
+    </g>
+
+    <path d="M406 51c44 2 80 33 90 76" fill="none" stroke="#73f7ff" stroke-width="18" stroke-linecap="round"/>
+    <path d="M400 94c27 2 48 20 55 46" fill="none" stroke="#73f7ff" stroke-width="18" stroke-linecap="round"/>
+  </g>
+</svg>

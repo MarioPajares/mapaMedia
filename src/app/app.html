@@ -1,0 +1,33 @@
+<div class="app-shell">
+  @if (auth.isLoggedIn()) {
+    <header class="topbar">
+      <a routerLink="/mapa" class="brand">Mapa Media</a>
+
+      <nav class="nav">
+        @if (auth.canShareRaces()) {
+          <button class="nav-link nav-button" type="button">Admin</button>
+        }
+      </nav>
+
+      <div class="auth-area">
+        <details class="user-menu">
+          <summary class="user-trigger">
+            <span class="avatar">{{ auth.displayName().charAt(0).toUpperCase() }}</span>
+            <span class="user-name">{{ auth.displayName() }}</span>
+          </summary>
+
+          <div class="menu-panel">
+            <p class="menu-name">{{ auth.displayName() }}</p>
+            @if (auth.canShareRaces()) {
+              <a class="menu-link" routerLink="/mapa" [queryParams]="{ panel: 'existing' }">Carreras existentes</a>
+              <a class="menu-link" routerLink="/mapa" [queryParams]="{ panel: 'add' }">Añadir Carrera</a>
+            }
+            <button class="menu-action" type="button" (click)="logout()">Cerrar sesion</button>
+          </div>
+        </details>
+      </div>
+    </header>
+  }
+
+  <router-outlet />
+</div>
